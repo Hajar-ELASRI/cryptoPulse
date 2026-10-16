@@ -1,0 +1,2 @@
+"""CryptoPulse data ingestion."""
+
