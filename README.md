@@ -2,7 +2,7 @@
 
 Infrastructure and ingestion for the Big Data project. This repository currently covers Person A's scope: Binance Spot transactions, RSS news, Reddit posts, historical Binance trades, and sentiment enrichment. The Spark jobs and user application belong to Persons B and C.
 
-Team tasks, the data transformation plan, integration order, and demo criteria are in [docs/plan-travail.md](docs/plan-travail.md).
+Start with the [complete project context](docs/project-context.md), then open the [team member briefs](docs/team/README.md). The original work plan and transformation notes are in [docs/plan-travail.md](docs/plan-travail.md).
 
 ## Start
 
