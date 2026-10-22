@@ -2,6 +2,8 @@
 
 Infrastructure and ingestion for the Big Data project. This repository currently covers Person A's scope: Binance Spot transactions, RSS news, Reddit posts, historical Binance trades, and sentiment enrichment. The Spark jobs and user application belong to Persons B and C.
 
+Team tasks, the data transformation plan, integration order, and demo criteria are in [docs/plan-travail.md](docs/plan-travail.md).
+
 ## Start
 
 1. Install Docker Desktop and start its Linux engine.
