@@ -1,8 +1,10 @@
-# CryptoPulse — Person A
+# CryptoPulse — ingestion and local infrastructure
 
-Infrastructure and ingestion for the Big Data project. This repository currently covers Person A's scope: Binance Spot transactions, RSS news, Reddit posts, historical Binance trades, and sentiment enrichment. The Spark jobs and user application belong to Persons B and C.
+Infrastructure and ingestion for the Big Data project. Hajar owns Binance Spot transactions, RSS news, optional Reddit posts, historical Binance trades, and sentiment enrichment. Ali owns Spark transformations, Mossab the Spring Boot API, and Mohammed the React dashboard.
 
 Start with the [complete project context](docs/project-context.md), then open the [team member briefs](docs/team/README.md). The original work plan and transformation notes are in [docs/plan-travail.md](docs/plan-travail.md).
+
+See the [ingestion runbook](docs/ingestion-operations.md) for operational checks, bounded history imports and connection details, and the [validation report](docs/validation-ingestion.md) for the verified state.
 
 ## Start
 
@@ -39,6 +41,8 @@ Read [docs/contracts.md](docs/contracts.md) with Person B before building the Sp
 The sentiment classifier uses the English VADER model. It produces a useful baseline for English titles and posts; assess its output on crypto slang before presenting sentiment as a reliable market signal.
 
 ## Local checks
+
+Run `docker compose --profile verify run --build --rm ingestion-check` to verify MongoDB, a registered Spark worker, four Kafka topics and real trade/news/sentiment samples. The command reads without committing consumer offsets and exits nonzero if a required stream is missing.
 
 Run `python -m unittest discover -s tests -v` for parser and importer checks. Run `docker compose config --quiet` to validate Compose syntax. The tests use only the Python standard library; Docker is needed for the end-to-end check.
 

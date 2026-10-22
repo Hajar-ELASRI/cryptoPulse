@@ -1,11 +1,12 @@
 import unittest
 from datetime import date
+from unittest.mock import patch
 
 from collectors.binance import normalize_trade
 from collectors.common import iso_from_epoch
 from collectors.reddit import normalize_post
 from collectors.rss import normalize_article
-from scripts.historical_loader import parse_trade_row, previous_months
+from scripts.historical_loader import configured_months, parse_trade_row, previous_months
 from sentiment.service import classify
 
 
@@ -42,7 +43,25 @@ class IngestionTests(unittest.TestCase):
         self.assertEqual(result["label"], "positive")
         self.assertIn("BTC", result["symbols"])
 
+    def test_nonfinite_and_nonpositive_trades_are_rejected(self):
+        for value in ("NaN", "Infinity", "-Infinity", "0", "-1", "not-a-number"):
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                normalize_trade({"e": "trade", "s": "BTCUSDT", "t": 42, "p": value, "q": "0.2", "T": 1735689600000, "m": False})
+            with self.subTest(history=value), self.assertRaises(ValueError):
+                parse_trade_row(["42", "64000.10", value, "12800.02", "1735689600000000", "False", "True"], "BTCUSDT")
+
+    def test_sentiment_recognizes_punctuation_and_cashtags(self):
+        event = {"event_id": "rss:example", "title": "Bitcoin, $ETH surge!", "event_time": "2025-01-01T00:00:00Z"}
+        result = classify(event, "crypto-news", _Analyzer())
+        self.assertEqual(result["symbols"], ["BTC", "ETH"])
+
+    def test_explicit_history_months_and_validation(self):
+        with patch.dict("os.environ", {"HISTORY_PERIODS": "2020-01,2020-02,2020-01"}):
+            self.assertEqual(configured_months(), ["2020-01", "2020-02"])
+        for value in ("2020-13", "2020-1", "2099-01"):
+            with patch.dict("os.environ", {"HISTORY_PERIODS": value}), self.assertRaises(ValueError):
+                configured_months()
+
 
 if __name__ == "__main__":
     unittest.main()
-

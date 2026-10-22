@@ -25,7 +25,7 @@ Les trois chantiers hors ingestion ont été distribués au hasard entre Ali, Mo
 - Branche de travail de la base existante : `codex/person-a-ingestion`.
 - La base comprend Docker Compose avec Kafka, MongoDB et Spark, les collecteurs Binance/RSS/Reddit, l'import historique Binance, un service de sentiment VADER, des tests unitaires et la documentation initiale.
 - Le contrat initial est [`contracts.md`](contracts.md); le plan de travail antérieur est [`plan-travail.md`](plan-travail.md).
-- Les vérifications unitaires de la partie ingestion ont déjà réussi lors du travail précédent. La pile complète avec Docker et la liaison de bout en bout restent à vérifier dans l'environnement de l'équipe. Ne pas présenter le flux complet comme déjà validé.
+- Validation du 22 octobre 2026 : les sept tests d'ingestion passent; Kafka, MongoDB, le master/worker Spark et les flux réels Binance/RSS/sentiment ont été vérifiés. Voir le [rapport d'ingestion](validation-ingestion.md) pour le périmètre exact et les résultats historiques. Les jobs métier Spark, l'API et le dashboard restent à construire; le projet applicatif complet n'est pas encore validé.
 - À l'inspection de départ de ce document, aucune branche ni contribution des autres membres n'était présente sur le dépôt distant. Vérifier l'état GitHub avant de commencer.
 
 ## 4. Architecture visée
@@ -114,7 +114,7 @@ Le schéma des sorties doit être confirmé par toute l'équipe et ajouté à [`
 ## 8. Contrats et interfaces
 
 - Kafka : noms de topics et JSON dans [`contracts.md`](contracts.md). Garder `event_id` stable, les heures en UTC ISO-8601 et les nombres décimaux précis.
-- MongoDB : B et A valident ensemble les champs des collections Silver/Gold; C consomme ces champs sans les réinterpréter.
+- MongoDB : Ali et Hajar valident ensemble les champs des collections Silver/Gold; Mossab et Mohammed consomment ces champs sans les réinterpréter.
 - REST : Mossab documente les routes et exemples JSON dans `docs/contracts.md` ou un fichier API dédié. Les routes prévues sont `/api/live`, `/api/alerts`, `/api/sentiment`, `/api/replay` et `/api/analytics`.
 - Les évolutions d'un champ/type doivent être annoncées et mises à jour dans le contrat avant que les consommateurs changent leur code.
 

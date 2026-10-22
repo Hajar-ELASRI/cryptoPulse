@@ -3,6 +3,7 @@
 import json
 import logging
 import os
+import re
 
 from collectors.common import publish, producer, utc_now
 
@@ -19,7 +20,7 @@ def classify(event: dict, source_topic: str, analyzer) -> dict:
     text = " ".join(str(event.get(name) or "") for name in ("title", "summary", "text"))
     score = float(analyzer.polarity_scores(text)["compound"])
     label = "positive" if score >= 0.05 else "negative" if score <= -0.05 else "neutral"
-    words = set(text.lower().replace("/", " ").replace("-", " ").split())
+    words = set(re.findall(r"[a-z0-9]+", text.lower()))
     symbols = [coin for coin, terms in COIN_TERMS.items() if words.intersection(terms)]
     return {
         "event_id": f"sentiment:{event['event_id']}",

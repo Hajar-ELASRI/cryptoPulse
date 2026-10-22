@@ -1,13 +1,13 @@
 # CryptoPulse data contracts (proposed v1)
 
-Person A publishes UTF-8 JSON to Kafka. Person B should confirm this contract before implementing Spark. All timestamps in Kafka are ISO 8601 UTC strings, such as `2026-10-16T09:00:00Z`. `event_id` is stable across retries and is the deduplication key. Prices and quantities are decimal **strings** to preserve exchange precision; Spark should cast them to `DecimalType`, not floating point.
+Hajar publishes UTF-8 JSON to Kafka. Ali should confirm this contract before implementing Spark. All timestamps in Kafka are ISO 8601 UTC strings, such as `2026-10-16T09:00:00Z`. `event_id` is stable across retries and is the deduplication key. Prices and quantities are decimal **strings** to preserve exchange precision; Spark should cast them to `DecimalType`, not floating point.
 
 ## Topics
 
 - `crypto-trades`: key and `event_id` = `binance:<SYMBOL>:<trade_id>`; fields `source`, `symbol`, `trade_id`, `price`, `quantity`, `event_time`, `ingested_at`, `is_buyer_maker`.
 - `crypto-news`: key and `event_id` = `rss:<SHA256 of article id or URL>`; fields `source`, `title`, `summary`, `url`, `event_time`, `published_at`, `ingested_at`.
 - `crypto-social`: key and `event_id` = `reddit:<post_id>`; fields `source`, `subreddit`, `title`, `text`, `url`, `score`, `num_comments`, `event_time`, `ingested_at`.
-- `crypto-sentiment`: key and `event_id` = `sentiment:<source_event_id>`; fields `source_event_id`, `source_topic`, `source`, `symbols`, `label` (`positive`, `neutral`, `negative`), `score` (VADER compound score from -1 to 1), `model`, `event_time`, `processed_at`. This is A's proposed handoff to B for MongoDB storage; confirm it together.
+- `crypto-sentiment`: key and `event_id` = `sentiment:<source_event_id>`; fields `source_event_id`, `source_topic`, `source`, `symbols`, `label` (`positive`, `neutral`, `negative`), `score` (VADER compound score from -1 to 1), `model`, `event_time`, `processed_at`. This is Hajar's proposed handoff to Ali for MongoDB storage; confirm it together.
 
 Example trade:
 
@@ -17,9 +17,9 @@ Example trade:
 
 ## MongoDB history
 
-Database `crypto_pulse`, collection `trades_history`. The historical loader inserts `event_id`, `source`, `symbol`, `trade_id`, `price`, `quantity`, `quote_quantity`, `event_time` (BSON UTC datetime), `is_buyer_maker` and `is_best_match`. It upserts on `(symbol, trade_id)` so a restart does not duplicate rows. The initial indexes are `(symbol, trade_id)` unique and `(symbol, event_time)` descending. Other collections initialized for B are `trades`, `news`, `social_posts`, `indicators`, `alerts`, and `sentiment`; B owns their final schemas.
+Database `crypto_pulse`, collection `trades_history`. The historical loader inserts `event_id`, `source`, `symbol`, `trade_id`, `price`, `quantity`, `quote_quantity`, `event_time` (BSON UTC datetime), `is_buyer_maker` and `is_best_match`. It upserts on `(symbol, trade_id)` so a restart does not duplicate rows. The initial indexes are `(symbol, trade_id)` unique and `(symbol, event_time)` descending. Other collections initialized for Ali are `trades`, `news`, `social_posts`, `indicators`, `alerts`, and `sentiment`; Ali owns their final schemas.
 
-## Processing expectations for B
+## Processing expectations for Ali
 
 - Parse trade `event_time` as a timestamp and cast `price` and `quantity` to decimal values.
 - Deduplicate live trades by `event_id` with a watermark; the producers can resend after a restart.

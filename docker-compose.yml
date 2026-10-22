@@ -11,9 +11,19 @@ x-python-service: &python-service
       condition: service_completed_successfully
 
 services:
+  kafka-storage-init:
+    image: ${KAFKA_IMAGE:-apache/kafka:4.3.1}
+    user: "0:0"
+    entrypoint: ["/bin/sh", "-c", "chown 1000:1000 /tmp/kraft-combined-logs"]
+    volumes:
+      - kafka-data:/tmp/kraft-combined-logs
+
   kafka:
-    image: apache/kafka:4.1.2
+    image: ${KAFKA_IMAGE:-apache/kafka:4.3.1}
     hostname: kafka
+    depends_on:
+      kafka-storage-init:
+        condition: service_completed_successfully
     ports:
       - "9092:9092"
     environment:
@@ -40,7 +50,7 @@ services:
       retries: 15
 
   kafka-init:
-    image: apache/kafka:4.1.2
+    image: ${KAFKA_IMAGE:-apache/kafka:4.3.1}
     depends_on:
       kafka:
         condition: service_healthy
@@ -70,10 +80,11 @@ services:
     command: ["mongosh", "mongodb://mongo:27017/crypto_pulse", "/scripts/mongo-init.js"]
 
   spark-master:
-    image: apache/spark:3.5.9-scala2.12-java17-python3-ubuntu
+    image: ${SPARK_IMAGE:-apache/spark:3.5.9-scala2.12-java17-python3-ubuntu}
     command: ["/opt/spark/bin/spark-class", "org.apache.spark.deploy.master.Master"]
     environment:
       SPARK_NO_DAEMONIZE: "true"
+      SPARK_MASTER_HOST: spark-master
     ports:
       - "8080:8080"
       - "7077:7077"
@@ -81,12 +92,14 @@ services:
       - spark-checkpoints:/opt/spark/checkpoints
 
   spark-worker:
-    image: apache/spark:3.5.9-scala2.12-java17-python3-ubuntu
+    image: ${SPARK_IMAGE:-apache/spark:3.5.9-scala2.12-java17-python3-ubuntu}
     command: ["/opt/spark/bin/spark-class", "org.apache.spark.deploy.worker.Worker", "spark://spark-master:7077"]
     depends_on:
       - spark-master
     environment:
       SPARK_NO_DAEMONIZE: "true"
+      SPARK_WORKER_CORES: "2"
+      SPARK_WORKER_MEMORY: 1g
 
   binance-collector:
     <<: *python-service
@@ -104,6 +117,25 @@ services:
   sentiment:
     <<: *python-service
     command: ["python", "-m", "sentiment.service"]
+
+  ingestion-check:
+    <<: *python-service
+    restart: "no"
+    profiles: ["verify"]
+    depends_on:
+      kafka-init:
+        condition: service_completed_successfully
+      mongo-init:
+        condition: service_completed_successfully
+      spark-worker:
+        condition: service_started
+      binance-collector:
+        condition: service_started
+      rss-collector:
+        condition: service_started
+      sentiment:
+        condition: service_started
+    command: ["python", "-m", "scripts.verify_ingestion"]
 
   historical-loader:
     build:

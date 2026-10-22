@@ -1,5 +1,7 @@
 # CryptoPulse — plan de travail de l'équipe
 
+> Document de cadrage initial avec trois rôles A/B/C. Pour la répartition actuelle entre quatre membres et l'état vérifié, utiliser le [contexte général](project-context.md), les [briefs individuels](team/README.md) et le [rapport d'ingestion](validation-ingestion.md). Les mentions d'une validation Docker encore à faire ci-dessous décrivent l'état initial.
+
 ## Objectif
 
 CryptoPulse ne doit pas seulement archiver les transactions. Le pipeline doit transformer les flux bruts en données propres, enrichies et agrégées, puis fournir des indicateurs et des alertes que le tableau de bord peut expliquer.
@@ -146,4 +148,3 @@ Personne B confirme les schémas de sortie avec A et C et les ajoute au contrat 
 - L'API et le tableau de bord utilisent les collections transformées.
 - Le replay reproduit les indicateurs/alertes d'une période passée.
 - Le rapport distingue clairement données d'entrée, transformations, résultats et limites du modèle de sentiment.
-

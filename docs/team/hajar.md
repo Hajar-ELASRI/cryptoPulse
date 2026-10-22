@@ -16,7 +16,18 @@ Fournir aux autres membres un environnement reproductible, des événements Kafk
 
 ## Base déjà présente
 
-La branche actuelle comprend Docker Compose (Kafka, MongoDB, Spark), topics, collecteur Binance, collecteurs RSS et Reddit, chargeur historique Binance, service de sentiment, contrat initial et vérifications unitaires de normalisation. La pile complète n'a pas encore été confirmée en fonctionnement de bout en bout dans l'environnement de l'équipe.
+La branche actuelle comprend Docker Compose (Kafka, MongoDB, Spark), topics, collecteur Binance, collecteurs RSS et Reddit, chargeur historique Binance, service de sentiment, contrat initial et vérifications unitaires de normalisation. L'infrastructure et les flux réels Binance/RSS/sentiment ont été validés le 22 octobre 2026. Les futurs jobs Spark et l'application restent à intégrer; voir le [rapport](../validation-ingestion.md).
+
+## Avancement au 22 octobre 2026
+
+- Infrastructure démarrée et contrôlée : Kafka, MongoDB et worker Spark enregistré.
+- Correctif des droits du volume Kafka au premier lancement intégré.
+- Commande de contrôle reproductible ajoutée : `docker compose --profile verify run --build --rm ingestion-check`.
+- Messages réels Binance, RSS et sentiment vérifiés face au contrat.
+- Import historique limité puis import d'un mois sur un symbole exécutés; résultats détaillés dans le rapport.
+- Guide d'exploitation et adresses à transmettre aux membres dans [`ingestion-operations.md`](../ingestion-operations.md).
+- À coordonner : validation commune des futurs schémas Gold/REST, branche d'intégration, connexion des jobs/services des autres membres et volume d'historique final.
+- Reddit reste optionnel et désactivé : les identifiants OAuth ne sont pas configurés sur cette machine.
 
 ## Tâches
 

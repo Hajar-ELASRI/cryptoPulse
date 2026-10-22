@@ -4,6 +4,7 @@ import json
 import logging
 import os
 import time
+from decimal import Decimal, InvalidOperation
 
 from collectors.common import iso_from_epoch, producer, publish, utc_now
 
@@ -18,8 +19,12 @@ def normalize_trade(payload: dict) -> dict:
     trade_id = int(payload["t"])
     price = str(payload["p"])
     quantity = str(payload["q"])
-    if float(price) <= 0 or float(quantity) <= 0:
-        raise ValueError("Price and quantity must be positive")
+    try:
+        numbers = (Decimal(price), Decimal(quantity))
+    except InvalidOperation as error:
+        raise ValueError("Price and quantity must be decimal numbers") from error
+    if any(not number.is_finite() or number <= 0 for number in numbers):
+        raise ValueError("Price and quantity must be finite and positive")
     return {
         "event_id": f"binance:{symbol}:{trade_id}",
         "source": "binance",
@@ -71,4 +76,3 @@ def run() -> None:
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     run()
-

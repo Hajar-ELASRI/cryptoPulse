@@ -4,6 +4,5 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 COPY collectors ./collectors
 COPY sentiment ./sentiment
-COPY scripts/__init__.py scripts/historical_loader.py ./scripts/
+COPY scripts ./scripts
 ENV PYTHONUNBUFFERED=1
-
