@@ -101,6 +101,50 @@ services:
       SPARK_WORKER_CORES: "2"
       SPARK_WORKER_MEMORY: 1g
 
+  spark-trades:
+    build:
+      context: ./spark
+    image: cryptopulse-spark:dev
+    profiles: ["spark"]
+    restart: unless-stopped
+    user: "0:0"
+    env_file: .env
+    depends_on:
+      kafka-init:
+        condition: service_completed_successfully
+      mongo-init:
+        condition: service_completed_successfully
+      spark-worker:
+        condition: service_started
+    volumes:
+      - spark-checkpoints:/opt/spark/checkpoints
+      - spark-ivy:/tmp/ivy
+    command:
+      - /opt/spark/bin/spark-submit
+      - --master=spark://spark-master:7077
+      - --packages=org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.9
+      - --conf=spark.jars.ivy=/tmp/ivy
+      - --conf=spark.driver.host=spark-trades
+      - --conf=spark.executor.memory=512m
+      - --conf=spark.cores.max=1
+      - --conf=spark.sql.shuffle.partitions=4
+      - /opt/cryptopulse/cryptopulse_spark/jobs/trades_stream.py
+
+  spark-test:
+    build:
+      context: ./spark
+    image: cryptopulse-spark:dev
+    profiles: ["test"]
+    restart: "no"
+    volumes:
+      - ./tests:/opt/cryptopulse/tests:ro
+    environment:
+      MONGO_TEST_URI: mongodb://mongo:27017
+    depends_on:
+      mongo:
+        condition: service_healthy
+    command: ["python3", "-m", "unittest", "discover", "-s", "tests/spark", "-t", ".", "-v"]
+
   binance-collector:
     <<: *python-service
     command: ["python", "-m", "collectors.binance"]
@@ -155,3 +199,4 @@ volumes:
   kafka-data:
   mongo-data:
   spark-checkpoints:
+  spark-ivy:
