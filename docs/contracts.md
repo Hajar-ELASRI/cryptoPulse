@@ -54,11 +54,11 @@ One document per valid, deduplicated live trade. `_id` = `event_id`, so writes a
 | `ingested_at`, `processed_at` | date | collector time and Spark time, for latency measures |
 | `is_buyer_maker` | bool | |
 
-Validation: required fields present; `price > 0` and `quantity > 0` and parseable as decimals; `symbol` in the configured list; `event_time` not more than 1 day in the future. Deduplication is by `event_id` with a watermark of 10 minutes (configurable); a duplicate older than the watermark may be written again but the upsert on `_id` keeps one document.
+Validation: required fields present; `price > 0` and `quantity > 0`, both parseable as `DECIMAL(18,8)`; `symbol` in the configured list; `event_time` not more than 1 day in the future. Deduplication is by `event_id` with a watermark of 10 minutes (configurable); a duplicate older than the watermark may be written again but the upsert on `_id` keeps one document.
 
 ### `trades_rejected` (quarantine)
 
-Messages that fail validation are kept, not dropped: `_id` (`<topic>:<partition>:<offset>`), `reason` (`invalid_json`, `missing_field:<name>`, `non_positive_price`, `non_positive_quantity`, `unknown_symbol`, `bad_timestamp`), `raw` (original string), `topic`, `partition`, `offset`, `rejected_at`.
+Messages that fail validation are kept, not dropped: `_id` (`<topic>:<partition>:<offset>`), `reason` (`invalid_json`, `missing_field:<name>`, `invalid_price`, `invalid_quantity`, `non_positive_price`, `non_positive_quantity`, `unknown_symbol`, `bad_timestamp`), `raw` (original string), `topic`, `partition`, `offset`, `rejected_at`.
 
 ### `indicators` (Gold, one row per symbol and minute)
 
