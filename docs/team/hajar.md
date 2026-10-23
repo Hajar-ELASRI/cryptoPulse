@@ -29,6 +29,13 @@ La branche actuelle comprend Docker Compose (Kafka, MongoDB, Spark), topics, col
 - À coordonner : validation commune des futurs schémas Gold/REST, branche d'intégration, connexion des jobs/services des autres membres et volume d'historique final.
 - Reddit reste optionnel et désactivé : les identifiants OAuth ne sont pas configurés sur cette machine.
 
+## Suite au 23 octobre 2026
+
+- Chargeur renforcé pour reprendre les fichiers partiels HTTP et les lots déjà validés dans MongoDB; contrôle de cohérence des checkpoints et réserve de stockage intégrés.
+- 14 tests réussis avec MongoDB, dont les scénarios d'interruption et de reprise.
+- Préparation des archives BTCUSDT/ETHUSDT de juillet à septembre 2026 et import long lancé dans `cryptopulse-history-btc-eth`.
+- Le démarrage du processus ne signifie pas que les six archives sont importées. Le rapport de statut doit annoncer six archives `complete` avant de cocher ce livrable.
+
 ## Tâches
 
 1. Vérifier le dépôt distant et convenir avec le groupe d'une branche d'intégration; ne pas présumer que `main` ou `develop` sont prêts.

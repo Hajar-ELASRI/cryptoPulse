@@ -1,5 +1,5 @@
 const database = db.getSiblingDB("crypto_pulse");
-for (const name of ["trades_history", "trades", "news", "social_posts", "indicators", "alerts", "sentiment"]) {
+for (const name of ["trades_history", "history_imports", "trades", "news", "social_posts", "indicators", "alerts", "sentiment"]) {
   if (!database.getCollectionNames().includes(name)) database.createCollection(name);
 }
 database.trades_history.createIndex({ symbol: 1, trade_id: 1 }, { unique: true });
@@ -12,4 +12,3 @@ database.indicators.createIndex({ symbol: 1, event_time: -1 });
 database.alerts.createIndex({ symbol: 1, event_time: -1 });
 database.sentiment.createIndex({ event_id: 1 }, { unique: true });
 print("CryptoPulse MongoDB collections and indexes ready");
-

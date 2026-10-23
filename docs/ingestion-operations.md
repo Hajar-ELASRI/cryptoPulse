@@ -45,7 +45,7 @@ docker compose --profile history run --build --rm -e HISTORY_SYMBOLS=BNBBTC -e H
 
 `HISTORY_PERIODS` contient des mois terminés au format `YYYY-MM`, séparés par des virgules; il remplace `HISTORY_MONTHS`. `HISTORY_MAX_ROWS=1000` importe au plus les 1 000 premières lignes valides de chaque archive. Le ZIP complet est néanmoins téléchargé et mis en cache sous `data/history`.
 
-Relancer exactement la même commande permet de vérifier l'idempotence : si les 1 000 lignes sont déjà présentes, le log indique `0 new trades`. L'import utilise des upserts et l'index unique `(symbol, trade_id)`.
+Relancer exactement la même commande permet de vérifier l'idempotence : si les 1 000 lignes sont déjà présentes, le log indique `0 new trades`. L'import utilise des insertions par lots, tolère les doublons de l'index unique `(symbol, trade_id)` et conserve les documents existants. Les lots validés sont suivis dans `history_imports`.
 
 Pour importer le mois entier du symbole choisi :
 
@@ -97,3 +97,68 @@ docker compose up -d
 ```
 
 Ces commandes conservent les volumes et le cache historique. Les paramètres et résultats de la validation effective sont dans [`validation-ingestion.md`](validation-ingestion.md).
+
+## Import long avec reprise
+
+Le téléchargeur garde un fichier `*.zip.part` et reprend avec HTTP Range après une coupure. Si le serveur renvoie le fichier entier, le fichier partiel est remplacé plutôt que concaténé. Le ZIP est contrôlé avant import. Les tentatives réseau sont limitées à huit par appel.
+
+Dans Mongo, chaque lot validé est suivi dans `history_imports`. Pour reprendre, l'empreinte SHA-256 du fichier et le nombre de transactions déjà stockées dans la plage d'identifiants doivent correspondre au checkpoint. Un import terminé et cohérent est ignoré. Un checkpoint incohérent provoque une relecture avec conservation des lignes existantes. Les archives ne sont pas décompressées en entier sur disque.
+
+`HISTORY_MIN_FREE_GB=10` garde une réserve sur le disque partagé avec `data/history`. Si cette réserve est atteinte, le processus échoue en conservant les données et son point de reprise. Une panne après une insertion mais avant son checkpoint peut faire rejouer un lot, sans créer de doublons. Exécuter un seul importeur à la fois sur ces archives.
+
+Pour lancer BTC/ETH sur juillet à septembre 2026 dans un conteneur nommé, depuis un terminal à la racine :
+
+```sh
+docker compose --profile history build historical-loader
+docker compose --profile history run -d --name cryptopulse-history-btc-eth -e HISTORY_SYMBOLS=BTCUSDT,ETHUSDT -e HISTORY_PERIODS=2026-07,2026-08,2026-09 -e HISTORY_MAX_ROWS=0 historical-loader
+docker update --restart=on-failure:3 cryptopulse-history-btc-eth
+docker logs --tail 20 cryptopulse-history-btc-eth
+```
+
+Le nom doit être libre au premier lancement. Ne pas relancer `run` si le conteneur existe déjà :
+
+```sh
+docker inspect cryptopulse-history-btc-eth --format '{{.State.Status}} exit={{.State.ExitCode}}'
+docker start cryptopulse-history-btc-eth
+```
+
+L'option `docker update` est explicite car `compose run` n'a pas conservé la politique de redémarrage lors du lancement contrôlé. La politique retente jusqu'à trois sorties en erreur; elle ne remplace pas un démarrage manuel après arrêt du moteur Docker. Le téléchargement et l'import restent longs : un conteneur démarré ne prouve pas que les six archives sont terminées.
+
+Contrôler les points de reprise :
+
+```sh
+docker compose exec mongo mongosh --quiet crypto_pulse --eval 'db.history_imports.find({}, {_id:1,symbol:1,rows_processed:1,status:1,updated_at:1}).toArray()'
+```
+
+Les six documents doivent avoir `status: "complete"` pour confirmer la fin de la série. Aucun document n'est créé avant le premier lot Mongo validé : consulter aussi les logs pendant le téléchargement. Le statut `running` indique le dernier lot validé, pas la santé actuelle du processus.
+
+Un rapport récapitulatif en JSON est également disponible. `--verify` recompte les plages stockées et `--require-complete` retourne le code 1 tant que la série n'est pas finie :
+
+Pour le conteneur nommé encore actif :
+
+```sh
+docker exec cryptopulse-history-btc-eth python -m scripts.history_status --verify
+```
+
+Pour un contrôle indépendant, même après la fin du conteneur :
+
+```sh
+docker compose --profile history run --rm --no-deps -e HISTORY_PERIODS=2026-07,2026-08,2026-09 historical-loader python -m scripts.history_status --verify --require-complete
+```
+
+Si Docker est indisponible, les archives peuvent être préparées depuis Windows avec Python et `requests` déjà installé, sans MongoDB. Arrêter le téléchargement indépendant avant de laisser un importeur télécharger les mêmes fichiers en parallèle :
+
+```powershell
+$env:HISTORY_DIR = 'data/history'
+$env:HISTORY_SYMBOLS = 'BTCUSDT,ETHUSDT'
+$env:HISTORY_PERIODS = '2026-07,2026-08,2026-09'
+python -m scripts.history_download
+```
+
+L'inventaire `data/history/download-inventory.json` est mis à jour après chaque ZIP validé. Les fichiers partiels sont conservés en cas de coupure; le même outil peut être relancé. La préparation des ZIP n'est pas un import dans MongoDB.
+
+Vérifications de récupération (une base de test distincte et jetable est créée puis supprimée par chaque test) :
+
+```powershell
+docker compose --profile history run --rm -v "${PWD}/tests:/app/tests:ro" -e MONGO_TEST_URI=mongodb://mongo:27017 historical-loader python -m unittest discover -s tests -v
+```

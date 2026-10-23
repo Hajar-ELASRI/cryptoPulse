@@ -52,3 +52,23 @@ L'archive/cache et les volumes Mongo sont locaux, exclus de Git. Chaque membre d
 - Équipe : décider de la branche d'intégration et du volume/symboles d'historique retenus pour la soutenance. Au démarrage de ce travail, la branche distante partagée était `codex/person-a-ingestion`.
 
 Les commandes de lancement, de diagnostic et d'import sont dans le [guide d'exploitation](ingestion-operations.md).
+
+## Suite : reprise des imports longs
+
+Le chargeur a été renforcé pour les six archives BTCUSDT/ETHUSDT de juillet à septembre 2026, disponibles lors de la vérification HTTP : 3 691 117 046 octets de ZIP au total, environ 36,25 Go de CSV. L'espace libre du disque hôte mesuré avant lancement dépassait 134 Go; le chargeur conserve une réserve configurable de 10 Gio et ne matérialise pas le CSV entier sur disque.
+
+L'import conserve désormais les téléchargements interrompus et reprend via HTTP Range. Les lots Mongo sont enregistrés dans `history_imports`; les écritures par insertion groupée conservent les transactions existantes grâce à l'index unique. Les prix, dates et champs de `trades_history` ne changent pas.
+
+**14 tests ont réussi dans le conteneur avec MongoDB**, dont sept nouveaux contrôles : coupure HTTP suivie d'une reprise partielle, serveur ignorant Range, passage d'un échantillon à un import complet, interruption entre insertion et checkpoint, suppression d'une ligne après checkpoint, changement du contenu de l'archive et refus d'ignorer une violation d'un autre index unique. Ces tests utilisent une archive locale fabriquée pour les scénarios et des bases Mongo temporaires distinctes; ils ne valent pas validation de la série BTC/ETH réelle.
+
+Le premier essai réel, utilisant l'ancien téléchargeur, s'est arrêté après une coupure réseau à environ 106 Mo du premier ZIP. **Ce premier lancement ne constitue pas un import terminé.** Consulter les logs du conteneur nommé et les six checkpoints avant d'annoncer la fin de la série.
+
+### Reprise du 23 octobre 2026
+
+Le moteur Docker/WSL ne répondait plus (erreur 500); il a été remis en service sans suppression des volumes. La vérification d'ingestion a ensuite retourné `ok: true` à nouveau.
+
+Les **six ZIP ont été téléchargés et contrôlés** avec `scripts.history_download` sur Windows pendant la remise en service, soit **3 691 117 046 octets**. L'inventaire local est enregistré sous `data/history/download-inventory.json` et reste exclu de Git.
+
+La nouvelle version de l'importeur tourne dans `cryptopulse-history-btc-eth`, avec les deux symboles et les trois mois explicitement fixés. La politique `on-failure:3` a été appliquée et vérifiée. Un contrôle a confirmé **2 220 000 nouvelles lignes BTCUSDT** traitées dans le premier mois. La première date est `2026-07-01T00:00:00.054Z`, et la dernière de ce checkpoint est `2026-07-01T13:59:10.119Z`; prix et quantités restent des chaînes. Un contrôle précédent par `history_status --verify` avait confirmé l'égalité du compte stocké et du checkpoint à 1 144 000 lignes.
+
+**La série complète reste en cours.** Les points de reprise `history_imports` et `scripts.history_status --verify --require-complete` fournissent l'état à jour; les nombres ci-dessus sont des observations datées, pas un compte final des six archives.

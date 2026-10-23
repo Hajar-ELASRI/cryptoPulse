@@ -17,7 +17,9 @@ Example trade:
 
 ## MongoDB history
 
-Database `crypto_pulse`, collection `trades_history`. The historical loader inserts `event_id`, `source`, `symbol`, `trade_id`, `price`, `quantity`, `quote_quantity`, `event_time` (BSON UTC datetime), `is_buyer_maker` and `is_best_match`. It upserts on `(symbol, trade_id)` so a restart does not duplicate rows. The initial indexes are `(symbol, trade_id)` unique and `(symbol, event_time)` descending. Other collections initialized for Ali are `trades`, `news`, `social_posts`, `indicators`, `alerts`, and `sentiment`; Ali owns their final schemas.
+Database `crypto_pulse`, collection `trades_history`. The historical loader inserts `event_id`, `source`, `symbol`, `trade_id`, `price`, `quantity`, `quote_quantity`, `event_time` (BSON UTC datetime), `is_buyer_maker` and `is_best_match`. It inserts in batches and tolerates duplicate trade keys so a restart does not duplicate rows or overwrite existing records. The initial indexes are `(symbol, trade_id)` unique and `(symbol, event_time)` descending. Other collections initialized for Ali are `trades`, `news`, `social_posts`, `indicators`, `alerts`, and `sentiment`; Ali owns their final schemas.
+
+Hajar also owns the operational `history_imports` collection: one document per archive filename (`_id`), with `symbol`, `sha256`, `archive_bytes`, `rows_processed`, `csv_records`, `first_trade_id`, `last_trade_id`, `inserted_total`, `status` (`running`, `sampled`, `complete`) and `updated_at` (BSON UTC date). These are committed import checkpoints, not market indicators. On recovery the importer checks the archive fingerprint and count of stored trades in the checkpoint's ID range before skipping prior CSV records. A crash after insertion but before a checkpoint can replay one batch safely. `running` records the last committed progress and does not prove a container is still running; inspect Docker status as well.
 
 ## Processing expectations for Ali
 
@@ -26,4 +28,3 @@ Database `crypto_pulse`, collection `trades_history`. The historical loader inse
 - News and social events should also deduplicate by `event_id`.
 - Consume `crypto-sentiment` if sentiment is to appear in MongoDB and the dashboard.
 - Read `trades_history` for replay. Its `event_time` is already a BSON date.
-

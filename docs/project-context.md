@@ -27,6 +27,7 @@ Les trois chantiers hors ingestion ont été distribués au hasard entre Ali, Mo
 - Le contrat initial est [`contracts.md`](contracts.md); le plan de travail antérieur est [`plan-travail.md`](plan-travail.md).
 - Validation du 22 octobre 2026 : les sept tests d'ingestion passent; Kafka, MongoDB, le master/worker Spark et les flux réels Binance/RSS/sentiment ont été vérifiés. Voir le [rapport d'ingestion](validation-ingestion.md) pour le périmètre exact et les résultats historiques. Les jobs métier Spark, l'API et le dashboard restent à construire; le projet applicatif complet n'est pas encore validé.
 - À l'inspection de départ de ce document, aucune branche ni contribution des autres membres n'était présente sur le dépôt distant. Vérifier l'état GitHub avant de commencer.
+- Suite au 23 octobre 2026 : l'import BTCUSDT/ETHUSDT de juillet à septembre 2026 est lancé avec reprise et suivi par archive. Le [rapport](validation-ingestion.md) distingue les téléchargements, les lignes déjà stockées et l'import complet encore en cours.
 
 ## 4. Architecture visée
 

@@ -30,7 +30,7 @@ After enabling Reddit, inspect `crypto-social` with the same Kafka console consu
 
 ## Historical import
 
-Set `HISTORY_MONTHS=3` or `6` and `HISTORY_SYMBOLS=BTCUSDT,ETHUSDT`, then run `docker compose --profile history run --rm historical-loader`. This imports the most recent **completed** calendar months. Binance archives are cached in `data/history`; MongoDB writes use batches and upserts. The volume can be large, so try `HISTORY_MONTHS=1` first. Binance Spot CSV timestamps from 2025 onward are microseconds; the loader accepts both microseconds and older milliseconds.
+Set `HISTORY_MONTHS=3` or `6` and `HISTORY_SYMBOLS=BTCUSDT,ETHUSDT`, then run `docker compose --profile history run --rm historical-loader`. This imports the most recent **completed** calendar months. Interrupted downloads resume from `.part` files. MongoDB writes use bulk insertion and the unique trade index to retain existing records; committed batches are checkpointed in `history_imports`. See the [runbook](docs/ingestion-operations.md) for recovery and background imports. The volume can be large, so try `HISTORY_MONTHS=1` first. Binance Spot CSV timestamps from 2025 onward are microseconds; the loader accepts both microseconds and older milliseconds.
 
 Verify the import with `docker compose exec mongo mongosh --quiet crypto_pulse --eval 'db.trades_history.countDocuments({})'`.
 
@@ -44,7 +44,7 @@ The sentiment classifier uses the English VADER model. It produces a useful base
 
 Run `docker compose --profile verify run --build --rm ingestion-check` to verify MongoDB, a registered Spark worker, four Kafka topics and real trade/news/sentiment samples. The command reads without committing consumer offsets and exits nonzero if a required stream is missing.
 
-Run `python -m unittest discover -s tests -v` for parser and importer checks. Run `docker compose config --quiet` to validate Compose syntax. The tests use only the Python standard library; Docker is needed for the end-to-end check.
+Run `python -m unittest discover -s tests -v` for local checks and `docker compose config --quiet` for Compose syntax. Parser checks use the standard library; HTTP recovery checks require `requests`, and MongoDB recovery checks run when `MONGO_TEST_URI` is set. The [runbook](docs/ingestion-operations.md) includes the container command that runs the full suite against disposable MongoDB databases.
 
 ## Source documentation
 
