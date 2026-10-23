@@ -28,3 +28,94 @@ Hajar also owns the operational `history_imports` collection: one document per a
 - News and social events should also deduplicate by `event_id`.
 - Consume `crypto-sentiment` if sentiment is to appear in MongoDB and the dashboard.
 - Read `trades_history` for replay. Its `event_time` is already a BSON date.
+
+## Spark output contracts (proposed v1, Ali)
+
+Proposed by Ali for review by Hajar, Mossab and Mohammed. Nothing here is implemented until the matching Spark PR merges; once agreed, field or type changes must be announced before consumers change their code. All collections live in database `crypto_pulse`. Timestamps are BSON UTC dates. Money and quantity fields are BSON `Decimal128` (Spring Data maps them to `BigDecimal`); they are never floats.
+
+### Live vs replay
+
+Every `indicators` and `alerts` document carries `run_id` and `mode`. Live streaming writes `mode: "live"`, `run_id: "live"`. A replay of `trades_history` writes `mode: "replay"` and `run_id: "replay-<name>"` (for example `replay-btc-2026-07-01`). Re-running a replay with the same `run_id` overwrites its own documents only, so it is reproducible and never touches live data. The API should filter `mode: "live"` unless a replay `run_id` is requested.
+
+### `trades` (Silver)
+
+One document per valid, deduplicated live trade. `_id` = `event_id`, so writes are idempotent upserts.
+
+| Field | Type | Notes |
+|---|---|---|
+| `_id`, `event_id` | string | `binance:<SYMBOL>:<trade_id>` |
+| `source` | string | `binance` |
+| `symbol` | string | upper-case pair, e.g. `BTCUSDT` |
+| `trade_id` | long | |
+| `price`, `quantity` | Decimal128 | exact values from Kafka |
+| `quote_volume` | Decimal128 | `price × quantity`, in the quote currency (USDT for BTCUSDT/ETHUSDT) |
+| `event_time` | date | exchange time, UTC |
+| `window_start` | date | `event_time` truncated to the minute |
+| `ingested_at`, `processed_at` | date | collector time and Spark time, for latency measures |
+| `is_buyer_maker` | bool | |
+
+Validation: required fields present; `price > 0` and `quantity > 0` and parseable as decimals; `symbol` in the configured list; `event_time` not more than 1 day in the future. Deduplication is by `event_id` with a watermark of 10 minutes (configurable); a duplicate older than the watermark may be written again but the upsert on `_id` keeps one document.
+
+### `trades_rejected` (quarantine)
+
+Messages that fail validation are kept, not dropped: `_id` (`<topic>:<partition>:<offset>`), `reason` (`invalid_json`, `missing_field:<name>`, `non_positive_price`, `non_positive_quantity`, `unknown_symbol`, `bad_timestamp`), `raw` (original string), `topic`, `partition`, `offset`, `rejected_at`.
+
+### `indicators` (Gold, one row per symbol and minute)
+
+`_id` = `<run_id>:<symbol>:<window_start ISO>`.
+
+| Field | Type | Notes |
+|---|---|---|
+| `run_id`, `mode` | string | see above |
+| `symbol` | string | |
+| `window_start`, `window_end` | date | one-minute tumbling window, `[start, end)` |
+| `trade_count` | int | |
+| `base_volume` | Decimal128 | sum of `quantity` (BTC, ETH) |
+| `quote_volume` | Decimal128 | sum of `quote_volume` (USDT) |
+| `min_price`, `max_price`, `avg_price` | Decimal128 | `avg_price` is the simple mean of trade prices |
+| `open_price`, `close_price` | Decimal128 | first and last trade of the window by `(event_time, trade_id)` |
+| `change_pct` | double or null | `100 × (close_price − prev_close_price) / prev_close_price`; null when no previous window exists |
+| `prev_window_start` | date or null | window the change is measured against: the latest earlier window of the same symbol and `run_id` (it can be more than one minute earlier if a minute had no trades) |
+| `updated_at` | date | |
+
+**Price choice:** the variation uses the **close** price, which is unambiguous and can be checked by hand. `avg_price` is stored as well, for display. This is a proposal for the team to confirm.
+
+Windows are updated while late trades arrive within the watermark, so a recent window can change between two reads (`updated_at` shows when). Index: `(run_id, symbol, window_start desc)`.
+
+### `alerts` (Gold)
+
+`_id` = `<run_id>:<type>:<symbol>:<key>` where `key` is the `window_start` ISO for window alerts and the `event_id` for `LARGE_TRADE`. Re-evaluating the same window overwrites the same alert.
+
+| Field | Type | Notes |
+|---|---|---|
+| `run_id`, `mode`, `symbol` | string | |
+| `type` | string | `VOLUME_SPIKE`, `PRICE_MOVE`, `LARGE_TRADE` |
+| `severity` | string | `warning` when the threshold is crossed, `critical` at twice the threshold |
+| `event_time` | date | `window_end` for window alerts, trade time for `LARGE_TRADE` |
+| `window_start` | date or null | |
+| `observed_value` | Decimal128 or double | measured value (see below) |
+| `threshold` | Decimal128 or double | value that was exceeded |
+| `baseline` | Decimal128 or double or null | e.g. the 20-minute average volume |
+| `unit` | string | `ratio`, `percent`, `USDT`… |
+| `reason` | string | readable sentence for the dashboard |
+| `ref_event_id` | string or null | trade that triggered a `LARGE_TRADE` |
+| `created_at` | date | |
+
+Rules and **demo** defaults (configurable, not market constants; to be tuned after observing the data):
+
+- `VOLUME_SPIKE`: `quote_volume` of the minute ÷ mean `quote_volume` of the previous 20 windows ≥ `ALERT_VOLUME_SPIKE_FACTOR` (2.0). Active only after `ALERT_WARMUP_MINUTES` (20) of history in the same run. `observed_value` is the ratio, `threshold` the factor, `baseline` the 20-minute mean.
+- `PRICE_MOVE`: `|change_pct|` ≥ `ALERT_PRICE_MOVE_PCT` (0.5). `observed_value` is `change_pct`, in percent.
+- `LARGE_TRADE`: one trade's `quote_volume` ≥ `ALERT_LARGE_TRADE_QUOTE` (100000 USDT). Evaluated on every Silver trade.
+
+Index: `(run_id, symbol, event_time desc)` and `(run_id, type, event_time desc)`.
+
+### Not yet specified
+
+`news`, `social_posts` and `sentiment` Silver documents, and the mapping between sentiment assets (`BTC`) and trade pairs (`BTCUSDT`), will be proposed in a follow-up PR once the trade pipeline is in.
+
+### Open questions for the team
+
+1. Close price (proposed) or mean price for `change_pct`?
+2. Is the live/replay separation by `run_id` and `mode` acceptable for the API and dashboard?
+3. Are the demo thresholds a good start, and who tunes them?
+4. Is `Decimal128` acceptable for Mossab, or should the API contract expect strings?
