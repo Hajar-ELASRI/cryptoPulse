@@ -98,7 +98,8 @@ def silver_trades(parsed: DataFrame) -> DataFrame:
             F.col("price_d").alias("price"),
             F.col("quantity_d").alias("quantity"),
             (F.col("price_d") * F.col("quantity_d")).alias("quote_volume"),
-            F.col("event_ts").alias("event_time"),
+            # Streaming Gold windows need the watermarked column; it equals event_ts for valid rows.
+            F.col("watermark_time" if "watermark_time" in parsed.columns else "event_ts").alias("event_time"),
             F.date_trunc("minute", "event_ts").alias("window_start"),
             F.to_timestamp("ingested_at").alias("ingested_at"),
             F.current_timestamp().alias("processed_at"),

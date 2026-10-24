@@ -16,6 +16,7 @@ class Settings:
     symbols: list[str]
     checkpoint_dir: str
     watermark: str
+    gold_watermark: str
     max_offsets_per_trigger: int
 
     @classmethod
@@ -27,5 +28,6 @@ class Settings:
             symbols=_csv(os.getenv("BINANCE_SYMBOLS", "btcusdt,ethusdt")),
             checkpoint_dir=os.getenv("SPARK_CHECKPOINT_DIR", "/opt/spark/checkpoints"),
             watermark=os.getenv("SILVER_WATERMARK", "10 minutes"),
+            gold_watermark=os.getenv("GOLD_WATERMARK", "1 minute"),
             max_offsets_per_trigger=int(os.getenv("SPARK_MAX_OFFSETS_PER_TRIGGER", "50000")),
         )
