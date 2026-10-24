@@ -4,8 +4,11 @@ import org.bson.types.Decimal128;
 import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 import static com.cryptopulse.api.ApiModels.*;
 @Service
@@ -26,10 +29,33 @@ class MarketService {
             d.getString("unit"), d.getString("reason"), d.getString("ref_event_id"), time(d, "created_at")));
     }
     List<Sentiment> sentiment(MarketFilter f) {
-        return read("sentiment", "event_time", f, d -> new Sentiment(d.getString("event_id"),
+        List<Document> docs = repository.find("sentiment", "event_time", f);
+        Map<String, Document> sources = sources(docs);
+        try {
+            return docs.stream().map(d -> {
+                Document src = sources.getOrDefault(d.getString("source_event_id"), new Document());
+                return new Sentiment(d.getString("event_id"),
             d.getString("source_event_id"), d.getString("source_topic"), d.getString("source"),
-            d.getList("symbols", String.class), d.getList("trade_symbols", String.class), d.getString("label"),
-            decimal(d, "score"), d.getString("model"), time(d, "event_time"), time(d, "processed_at"), time(d, "stored_at")));
+            src.getString("title"), src.getString("url"), d.getList("symbols", String.class), d.getList("trade_symbols", String.class), d.getString("label"),
+            decimal(d, "score"), d.getString("model"), time(d, "event_time"), time(d, "processed_at"), time(d, "stored_at"));
+            }).toList();
+        } catch (RuntimeException e) { throw new IllegalStateException("Stored document does not match the market contract", e); }
+    }
+    /** One `_id $in` read per source collection for the page; unknown sources keep a null title and url. */
+    private Map<String, Document> sources(List<Document> sentiment) {
+        Map<String, List<String>> ids = new HashMap<>();
+        for (Document d : sentiment) {
+            String id = d.getString("source_event_id");
+            if (id == null) continue;
+            String collection = "crypto-social".equals(d.getString("source_topic")) ? "social_posts" : "news";
+            ids.computeIfAbsent(collection, k -> new ArrayList<>()).add(id);
+        }
+        Map<String, Document> byId = new HashMap<>();
+        ids.forEach((collection, list) -> {
+            List<Document> found = repository.titles(collection, list);
+            if (found != null) found.forEach(s -> byId.put(String.valueOf(s.get("_id")), s));
+        });
+        return byId;
     }
     List<Run> runs(int page, int limit) {
         return repository.runs(page, limit).stream().map(d -> new Run(d.getString("_id"),
