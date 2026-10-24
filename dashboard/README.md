@@ -22,7 +22,7 @@ Older links such as `/live?symbol=ETHUSDT` redirect to `/app/live?symbol=ETHUSDT
 | Variable | Default | Meaning |
 |---|---|---|
 | `VITE_USE_MOCKS` | `true` | `true`: synthetic demo fixtures. `false`: Mossab's API. |
-| `VITE_API_URL` | `http://localhost:8081` | API base URL (port to confirm with Mossab; Spark UI uses 8080). |
+| `VITE_API_URL` | `http://localhost:8081` | API base URL without `/api` (port confirmed in `docs/api.md`; Spark UI uses 8080). |
 | `VITE_REFRESH_MS` | `30000` | Polling interval of Live, Alerts and Sentiment. |
 | `VITE_SYMBOLS` | `BTCUSDT,ETHUSDT` | Symbols offered in the pickers. |
 
@@ -30,7 +30,11 @@ Older links such as `/live?symbol=ETHUSDT` redirect to `/app/live?symbol=ETHUSDT
 
 Until the API exists, `VITE_USE_MOCKS=true` serves the files in `src/mocks/fixtures/`. They follow the field names of `docs/contracts.md` (Spark output contracts) and the alert sentences of `spark/cryptopulse_spark/gold.py`, and they are generated deterministically by `npm run mocks` (`scripts/generate-mocks.mjs`). In this mode the page shows a **Demo data** badge and a banner, so simulated data is never mistaken for real data. The fixtures are loaded only in demo mode.
 
-To switch to the real API: set `VITE_USE_MOCKS=false` and `VITE_API_URL`, restart `npm run dev`. If a route or field differs from `docs/dashboard-api-needs.md`, adapt `src/api/index.js` only.
+To switch to the real API: set `VITE_USE_MOCKS=false` (and `VITE_API_URL` if not 8081), restart `npm run dev`. Routes and fields follow Mossab's `docs/api.md`; if they change, adapt `src/api/index.js` only. Notes on the real API:
+
+- The "API online" check calls `/api/live?limit=1`: `/actuator/health` is outside the API's CORS mapping.
+- Analytics and replay follow `page` until a page has fewer than 500 rows (up to 10,000 windows).
+- The API has no analytics summary and no article title/URL: Analytics shows the chart and the window count, Sentiment shows `source_event_id` as the item name.
 
 ## Structure
 

@@ -6,6 +6,15 @@ import { useApi } from "../lib/useApi";
 
 const LABELS = [{ value: "", label: "All" }, { value: "positive", label: "Positive" }, { value: "neutral", label: "Neutral" }, { value: "negative", label: "Negative" }];
 
+// The API has no article title (docs/api.md), so name the item by its publisher:
+// "CoinDesk: Bitcoin, Ethereum, …" -> "CoinDesk article"; Reddit items are posts.
+function itemName(s) {
+  if (s.title) return s.title;
+  if (s.source_topic === "crypto-social") return s.source ? `Reddit post in ${s.source}` : "Reddit post";
+  const publisher = (s.source || "").split(":")[0].replace(/\.com( News)?$/i, "").trim();
+  return publisher ? `${publisher} article` : "News article";
+}
+
 function ScoreBar({ score }) {
   const s = Math.max(-1, Math.min(1, f.toNum(score) ?? 0));
   const color = s > 0.05 ? "var(--color-up)" : s < -0.05 ? "var(--color-down)" : "var(--color-neutral)";
@@ -55,13 +64,14 @@ export default function Sentiment() {
                   <li key={s.event_id} className="news-item">
                     <div>
                       {s.url ? (
-                        <a className="news-title" href={s.url} target="_blank" rel="noreferrer noopener">{s.title || s.source_event_id}</a>
+                        <a className="news-title" href={s.url} target="_blank" rel="noreferrer noopener">{itemName(s)}</a>
                       ) : (
-                        <span className="news-title">{s.title || s.source_event_id}</span>
+                        <span className="news-title">{itemName(s)}</span>
                       )}
                       <div className="news-meta">
                         <span className="num">{f.dateTime(s.event_time, tz)} {f.tzLabel(tz)}</span>
-                        <span>· {s.source_topic === "crypto-social" ? "Reddit" : "News (RSS)"}</span>
+                        <span>{s.source_topic === "crypto-social" ? "Reddit" : "News feed"}</span>
+                        {!s.title && <span className="num" title="Source event id">{s.source_event_id}</span>}
                         {(s.trade_symbols || s.symbols || []).map((sym) => (
                           <span key={sym} className="badge badge-neutral">{sym}</span>
                         ))}

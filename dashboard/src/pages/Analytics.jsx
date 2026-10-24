@@ -52,7 +52,7 @@ export default function Analytics() {
           <LastUpdated q={q} />
           <Async q={q} height={96} isEmpty={(d) => !d.indicators.length} empty={null}>
             {(d) =>
-              d.summary ? <Summary s={d.summary} symbol={symbol} /> : <Notice>The API returned no summary for this period; only the charts are shown.</Notice>
+              d.summary ? <Summary s={d.summary} symbol={symbol} /> : <Notice>{d.indicators.length} one-minute windows from Spark in this period. Hover the chart or open its data table for each minute; the API does not compute period totals.</Notice>
             }
           </Async>
           <section className="card" aria-labelledby="an-chart">

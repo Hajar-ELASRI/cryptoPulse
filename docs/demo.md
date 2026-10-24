@@ -1,6 +1,6 @@
 # Demo procedure (draft, Mohammed)
 
-Goal: show the full flow from raw events to an explained alert on the dashboard, in about 10 minutes, with a fallback if an external source is down. This draft uses only what is already on `main` (Hajar's ingestion, Ali's Spark jobs) plus the dashboard. The API steps are to complete once Mossab's API is merged.
+Goal: show the full flow from raw events to an explained alert on the dashboard, in about 10 minutes, with a fallback if an external source is down. It uses what is on `main`: Hajar's ingestion, Ali's Spark jobs, Mossab's API and the dashboard.
 
 ## 0. Before the presentation (the day before)
 
@@ -18,7 +18,14 @@ Goal: show the full flow from raw events to an explained alert on the dashboard,
    docker compose --profile spark up -d spark-trades
    docker compose --profile spark up -d spark-indicators
    ```
-5. Start the API (Mossab, command to add) and the dashboard with `VITE_USE_MOCKS=false`.
+5. Start the API (`docs/api.md`) and check it, then the dashboard on the real API:
+   ```sh
+   docker compose up --build -d mongo api
+   curl http://localhost:8081/actuator/health
+   cd dashboard
+   VITE_USE_MOCKS=false npm run dev    # PowerShell: $env:VITE_USE_MOCKS='false'; npm run dev
+   ```
+   Open http://localhost:5173: the top bar must say "API online" and the demo badge must be gone.
 6. Take screenshots of each view as a fallback.
 
 ## 1. Script

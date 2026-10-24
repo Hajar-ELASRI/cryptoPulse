@@ -9,9 +9,9 @@ export class ApiError extends Error {
   }
 }
 
-function query(params = {}) {
+function query(params) {
   const q = new URLSearchParams();
-  for (const [k, v] of Object.entries(params)) {
+  for (const [k, v] of Object.entries(params || {})) {
     if (v !== undefined && v !== null && v !== "") q.set(k, v);
   }
   const s = q.toString();
@@ -19,9 +19,11 @@ function query(params = {}) {
 }
 
 export async function request(path, params, { signal } = {}) {
+  // Built outside the try so a client-side bug is never reported as "API unreachable".
+  const url = `${API_URL}${path}${query(params)}`;
   let res;
   try {
-    res = await fetch(`${API_URL}${path}${query(params)}`, { signal, headers: { Accept: "application/json" } });
+    res = await fetch(url, { signal, headers: { Accept: "application/json" } });
   } catch (e) {
     if (e.name === "AbortError") throw e;
     throw new ApiError(`Cannot reach the API at ${API_URL}. Is it running?`, 0);
