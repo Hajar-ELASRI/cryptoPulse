@@ -124,3 +124,7 @@ Index: `(run_id, symbol, event_time desc)` and `(run_id, type, event_time desc)`
 3. Are the demo thresholds a good start, and who tunes them?
 4. Is `Decimal128` acceptable for Mossab, or should the API contract expect strings?
 5. Is `trade_symbols` (asset + `USDT`) the right way to link sentiment to trade pairs?
+
+## REST API handoff (Mossab)
+
+The API consumes the Spark field names above, including close-based `change_pct`, explicit `mode`/`run_id` partitions and sentiment `trade_symbols`. Decimal values are serialized as JSON strings; counters remain integers. Lists use JSON arrays. See [api.md](api.md) for routes, filters, replay run discovery, pagination and frontend examples. No market transformations are duplicated in the API. The Spark contract was retrieved from `origin/main` at `2ff9e21` on 24 October 2026; a real end-to-end integration check is still required.

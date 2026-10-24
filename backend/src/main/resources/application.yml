@@ -1,0 +1,32 @@
+server:
+  port: ${API_PORT:8081}
+  error:
+    include-message: never
+    include-stacktrace: never
+    include-binding-errors: never
+spring:
+  application:
+    name: cryptopulse-api
+  data:
+    mongodb:
+      uri: ${API_MONGO_URI:mongodb://localhost:27017/crypto_pulse?serverSelectionTimeoutMS=3000&connectTimeoutMS=3000&socketTimeoutMS=5000}
+      database: ${MONGO_DATABASE:crypto_pulse}
+  jackson:
+    property-naming-strategy: SNAKE_CASE
+    serialization:
+      write-dates-as-timestamps: false
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
+      probes:
+        enabled: true
+      group:
+        readiness:
+          include: readinessState,mongo
+api:
+  cors-origins: ${API_CORS_ORIGINS:http://localhost:5173,http://localhost:3000}

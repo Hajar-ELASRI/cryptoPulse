@@ -6,6 +6,8 @@ Start with the [complete project context](docs/project-context.md), then open th
 
 Work happens on branches named by the [branch convention](docs/branching.md) and merges into `main`. The Spark pipeline is described in [docs/spark-operations.md](docs/spark-operations.md). See the [ingestion runbook](docs/ingestion-operations.md) for operational checks, bounded history imports and connection details, and the [validation report](docs/validation-ingestion.md) for the verified state.
 
+Mossab's Spring Boot API is in [`backend/`](backend/). See the [API runbook and frontend examples](docs/api.md) for startup, configuration, demo fixtures, routes and tests. It uses Ali's Spark field names and Mohammed's dashboard response shapes, including replay run discovery. With Docker running and `.env` configured, use `docker compose up --build -d mongo api`; the API URL is `http://localhost:8081` and Swagger is at `/swagger-ui.html`. Spark executes replays externally; the API reads their results.
+
 ## Start
 
 1. Install Docker Desktop and start its Linux engine.
