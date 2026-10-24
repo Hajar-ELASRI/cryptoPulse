@@ -1,3 +1,4 @@
+import { useSearchParams } from "react-router-dom";
 import { api } from "../api";
 import AlertList from "../components/AlertList";
 import MarketCharts from "../components/MarketCharts";
@@ -14,8 +15,17 @@ const REPLAY_CMD = `docker compose --profile spark run --rm --no-deps spark-trad
 export default function Replay() {
   const { tz } = useTz();
   const runs = useApi((o) => api.replayRuns(o), []);
-  const [runId, setRunId] = useParam("run", "");
+  const [runId] = useParam("run", "");
   const [symbol, setSymbol] = useParam("symbol", "");
+  const [, setParams] = useSearchParams();
+  // One URL update: two useParam setters in the same click keep only the last one, losing `run`.
+  const chooseRun = (id) =>
+    setParams((p) => {
+      const next = new URLSearchParams(p);
+      next.set("run", id);
+      next.delete("symbol");
+      return next;
+    }, { replace: true });
   const selected = runs.data?.find((r) => r.run_id === runId);
   const runSymbol = symbol || selected?.symbols?.[0] || "";
   const q = useApi((o) => api.replay(runId, { symbol: runSymbol }, o), [runId, runSymbol], { enabled: !!selected });
@@ -42,7 +52,7 @@ export default function Replay() {
           {(list) => (
             <div className="runs">
               {list.map((r) => (
-                <button key={r.run_id} type="button" className="run" aria-pressed={r.run_id === runId} onClick={() => { setRunId(r.run_id); setSymbol(""); }}>
+                <button key={r.run_id} type="button" className="run" aria-pressed={r.run_id === runId} onClick={() => chooseRun(r.run_id)}>
                   <span className="run-id">{r.run_id}</span>
                   <span className="muted text-sm">
                     {f.dateTime(r.start, tz)} → {f.dateTime(r.end, tz)} {f.tzLabel(tz)}
