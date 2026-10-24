@@ -27,6 +27,15 @@ def parse_time(value: str) -> datetime:
     return datetime.fromisoformat(value.replace("Z", "+00:00")).astimezone(timezone.utc).replace(tzinfo=None)
 
 
+def history_row(d):
+    """One `trades_history` document as a HISTORY_SCHEMA tuple.
+
+    Mongo returns large trade ids as bson Int64, which PySpark's schema check rejects
+    for `long`: convert to a plain int.
+    """
+    return (d["event_id"], d["symbol"], int(d["trade_id"]), str(d["price"]), str(d["quantity"]), d["event_time"])
+
+
 def history_trades(df):
     """`trades_history` rows in the same shape the Silver job produces."""
     typed = (df.withColumn("price", F.col("price").cast(silver.DECIMAL))
@@ -63,7 +72,7 @@ def main() -> None:
     began = time.monotonic()
     while cursor < end:
         upper = min(cursor + timedelta(minutes=args.chunk_minutes), end)
-        rows = [(d["event_id"], d["symbol"], d["trade_id"], str(d["price"]), str(d["quantity"]), d["event_time"])
+        rows = [history_row(d)
                 for d in database["trades_history"].find(
                     {"symbol": {"$in": symbols}, "event_time": {"$gte": cursor, "$lt": upper}},
                     {"event_id": 1, "symbol": 1, "trade_id": 1, "price": 1, "quantity": 1, "event_time": 1})]
