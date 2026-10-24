@@ -119,3 +119,24 @@ def process_windows(spark, database, windows, run_id: str, mode: str, params, no
 
 def write_large_trade_alerts(database, alerts_df, run_id: str, mode: str, now) -> int:
     return bulk_upsert(database["alerts"], (alert_document(r.asDict(), run_id, mode, now) for r in alerts_df.collect()))
+
+
+# ---- Editorial ------------------------------------------------------------------------
+
+def editorial_document(row: dict) -> dict:
+    doc = dict(row)
+    doc["_id"] = doc["event_id"]
+    return doc
+
+
+def write_editorial_batch(database, batch) -> dict:
+    from cryptopulse_spark import editorial
+
+    parsed = batch
+    counts = {}
+    for topic, (collection, _, _) in editorial.TOPICS.items():
+        counts[collection] = bulk_upsert(
+            database[collection], (editorial_document(r.asDict()) for r in editorial.typed(parsed, topic).collect()))
+    counts["rejected"] = bulk_upsert(
+        database["editorial_rejected"], (rejected_document(r.asDict()) for r in editorial.rejected(parsed).collect()))
+    return counts

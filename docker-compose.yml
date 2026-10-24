@@ -157,6 +157,33 @@ services:
       - --conf=spark.sql.shuffle.partitions=4
       - /opt/cryptopulse/cryptopulse_spark/jobs/indicators_stream.py
 
+  spark-editorial:
+    image: cryptopulse-spark:dev
+    profiles: ["spark"]
+    restart: unless-stopped
+    user: "0:0"
+    env_file: .env
+    depends_on:
+      kafka-init:
+        condition: service_completed_successfully
+      mongo-init:
+        condition: service_completed_successfully
+      spark-worker:
+        condition: service_started
+    volumes:
+      - spark-checkpoints:/opt/spark/checkpoints
+      - spark-ivy:/tmp/ivy
+    command:
+      - /opt/spark/bin/spark-submit
+      - --master=spark://spark-master:7077
+      - --packages=org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.9
+      - --conf=spark.jars.ivy=/tmp/ivy
+      - --conf=spark.driver.host=spark-editorial
+      - --conf=spark.executor.memory=512m
+      - --conf=spark.cores.max=1
+      - --conf=spark.sql.shuffle.partitions=4
+      - /opt/cryptopulse/cryptopulse_spark/jobs/editorial_stream.py
+
   spark-test:
     build:
       context: ./spark
