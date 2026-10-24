@@ -10,7 +10,7 @@ public final class ApiModels {
         Instant windowStart, String observedValue, String threshold, String baseline, String unit, String reason,
         String refEventId, Instant createdAt) {}
     public record Sentiment(String eventId, String sourceEventId, String sourceTopic, String source,
-        List<String> symbols, List<String> tradeSymbols, String label, String score, String model,
+        String title, String url, List<String> symbols, List<String> tradeSymbols, String label, String score, String model,
         Instant eventTime, Instant processedAt, Instant storedAt) {}
     public record Analytics(String symbol, Instant from, Instant to, String runId, List<Indicator> indicators) {}
     public record Replay(String runId, List<Indicator> indicators, List<Alert> alerts) {}

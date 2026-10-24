@@ -91,10 +91,10 @@ Invoke-RestMethod 'http://localhost:8081/api/alerts?run_id=replay-btc-demo'
 Élément sentiment :
 
 ```json
-{"event_id":"sentiment:rss:demo","source_event_id":"rss:demo","source_topic":"crypto-news","source":"rss","symbols":["BTC"],"trade_symbols":["BTCUSDT"],"label":"positive","score":"0.64","model":"vader","event_time":"2026-10-16T09:00:00Z","processed_at":"2026-10-16T09:01:00Z","stored_at":"2026-10-16T09:02:00Z"}
+{"event_id":"sentiment:rss:demo","source_event_id":"rss:demo","source_topic":"crypto-news","source":"rss","title":"Bitcoin glisse sous 80 000 $","url":"https://example.org/article","symbols":["BTC"],"trade_symbols":["BTCUSDT"],"label":"positive","score":"0.64","model":"vader","event_time":"2026-10-16T09:00:00Z","processed_at":"2026-10-16T09:01:00Z","stored_at":"2026-10-16T09:02:00Z"}
 ```
 
-Pas de jointure titre/URL : afficher `source_event_id`, solution explicitement acceptée par Mohammed. Pas de `summary` analytics : afficher les graphiques et les valeurs Spark. La variation provient de Spark et utilise les **clôtures** ; aucun recalcul dans l'API ou React.
+`title` et `url` viennent du document source (`news` ou `social_posts` selon `source_topic`), lu par `_id` = `source_event_id` en une requête `$in` par page. Ils valent `null` si la source n'est pas (encore) stockée ; le frontend affiche alors l'éditeur et `source_event_id`. Pas de `summary` analytics : afficher les graphiques et les valeurs Spark. La variation provient de Spark et utilise les **clôtures** ; aucun recalcul dans l'API ou React.
 
 ## Erreurs, santé et OpenAPI
 

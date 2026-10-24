@@ -10,6 +10,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Repository;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 @Repository
@@ -18,6 +19,13 @@ class MarketRepository {
     MarketRepository(MongoTemplate mongo) { this.mongo = mongo; }
     List<Document> find(String collection, String timeField, MarketFilter filter) {
         return mongo.find(query(collection, timeField, filter), Document.class, collection);
+    }
+    /** Title and url of editorial sources (news, social_posts) by `_id` = `event_id`. */
+    List<Document> titles(String collection, Collection<String> ids) {
+        if (ids.isEmpty()) return List.of();
+        Query query = new Query(Criteria.where("_id").in(ids));
+        query.fields().include("title").include("url");
+        return mongo.find(query, Document.class, collection);
     }
     static Query query(String collection, String timeField, MarketFilter f) {
         List<Criteria> clauses = new ArrayList<>();

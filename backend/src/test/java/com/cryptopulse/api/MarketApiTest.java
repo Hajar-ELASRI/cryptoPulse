@@ -72,6 +72,21 @@ class MarketApiTest {
             .andExpect(jsonPath("$[0].source_event_id").value("rss:1"));
         verify(repository).find(eq("sentiment"),anyString(),argThat(f -> "positive".equals(f.label()) && f.limit()==50));
     }
+    @Test void sentimentCarriesSourceTitleAndUrl() throws Exception {
+        when(repository.find(anyString(),anyString(),any())).thenReturn(List.of(
+            new Document("event_id","sentiment:rss:1").append("source_event_id","rss:1").append("source_topic","crypto-news")
+                .append("label","negative").append("score",-0.3),
+            new Document("event_id","sentiment:rss:2").append("source_event_id","rss:2").append("source_topic","crypto-news")
+                .append("label","neutral").append("score",0)));
+        when(repository.titles(eq("news"),argThat(ids -> ids.containsAll(List.of("rss:1","rss:2"))))).thenReturn(List.of(
+            new Document("_id","rss:1").append("title","Bitcoin slides below 80,000").append("url","https://example.org/a")));
+        mvc.perform(get("/api/sentiment")).andExpect(status().isOk())
+            .andExpect(jsonPath("$[0].title").value("Bitcoin slides below 80,000"))
+            .andExpect(jsonPath("$[0].url").value("https://example.org/a"))
+            .andExpect(jsonPath("$[1].title").doesNotExist())
+            .andExpect(jsonPath("$[1].source_event_id").value("rss:2"));
+        verify(repository, never()).titles(eq("social_posts"), any());
+    }
     @Test void replayRunsAndDetails() throws Exception {
         when(repository.runs(0,100)).thenReturn(List.of(new Document("_id","replay-demo")
             .append("symbols",List.of("ETHUSDT","BTCUSDT")).append("indicator_count",360).append("alert_count",12)
