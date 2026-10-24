@@ -123,6 +123,7 @@ services:
 ### Limits
 
 - Micro-batches are collected on the driver and bulk-written with pymongo. `SPARK_MAX_OFFSETS_PER_TRIGGER` (default 50000) bounds batch size; this is enough for the live Binance feed of two symbols but is not a distributed sink.
-- The worker is limited to 2 cores and 1 GB; the job asks for 1 core and 512 MB.
+- The worker has 3 cores and 2 GB: each of the three streaming jobs (trades, indicators, editorial) asks for 1 core and 512 MB, so all three run at once. With fewer cores the last job submitted waits forever with "Initial job has not accepted any resources".
+- The master and worker restart automatically (`restart: unless-stopped`); a job started while the master is down retries through its own restart policy.
 - The job runs as root in its container so it can write the checkpoint volume.
 - Dedup state is bounded by the watermark: a duplicate arriving later than that may be processed again, but the upsert on `_id = event_id` still leaves one document.

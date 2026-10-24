@@ -97,6 +97,7 @@ services:
   spark-master:
     image: ${SPARK_IMAGE:-apache/spark:3.5.9-scala2.12-java17-python3-ubuntu}
     command: ["/opt/spark/bin/spark-class", "org.apache.spark.deploy.master.Master"]
+    restart: unless-stopped
     environment:
       SPARK_NO_DAEMONIZE: "true"
       SPARK_MASTER_HOST: spark-master
@@ -109,12 +110,14 @@ services:
   spark-worker:
     image: ${SPARK_IMAGE:-apache/spark:3.5.9-scala2.12-java17-python3-ubuntu}
     command: ["/opt/spark/bin/spark-class", "org.apache.spark.deploy.worker.Worker", "spark://spark-master:7077"]
+    restart: unless-stopped
     depends_on:
       - spark-master
     environment:
       SPARK_NO_DAEMONIZE: "true"
-      SPARK_WORKER_CORES: "2"
-      SPARK_WORKER_MEMORY: 1g
+      # One core and 512 MB per streaming job: trades, indicators and editorial run together.
+      SPARK_WORKER_CORES: "3"
+      SPARK_WORKER_MEMORY: 2g
 
   spark-trades:
     build:
