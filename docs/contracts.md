@@ -80,7 +80,7 @@ Messages that fail validation are kept, not dropped: `_id` (`<topic>:<partition>
 
 **Price choice:** the variation uses the **close** price, which is unambiguous and can be checked by hand. `avg_price` is stored as well, for display. This is a proposal for the team to confirm.
 
-Windows are updated while late trades arrive within the watermark, so a recent window can change between two reads (`updated_at` shows when). Index: `(run_id, symbol, window_start desc)`.
+Live windows are written once, after the window is closed by a 1-minute watermark (so about two minutes after the minute starts); a trade later than that is kept in `trades` but not counted in its indicator. Replay windows are always complete. "Previous 20 windows" means the previous 20 rows of that symbol and run; a minute without trades has no row. Index: `(run_id, symbol, window_start desc)`.
 
 ### `alerts` (Gold)
 
@@ -93,9 +93,9 @@ Windows are updated while late trades arrive within the watermark, so a recent w
 | `severity` | string | `warning` when the threshold is crossed, `critical` at twice the threshold |
 | `event_time` | date | `window_end` for window alerts, trade time for `LARGE_TRADE` |
 | `window_start` | date or null | |
-| `observed_value` | Decimal128 or double | measured value (see below) |
-| `threshold` | Decimal128 or double | value that was exceeded |
-| `baseline` | Decimal128 or double or null | e.g. the 20-minute average volume |
+| `observed_value` | double | measured value (see below) |
+| `threshold` | double | value that was exceeded |
+| `baseline` | double or null | e.g. the 20-minute mean volume, or the previous close |
 | `unit` | string | `ratio`, `percent`, `USDT`… |
 | `reason` | string | readable sentence for the dashboard |
 | `ref_event_id` | string or null | trade that triggered a `LARGE_TRADE` |
@@ -104,8 +104,8 @@ Windows are updated while late trades arrive within the watermark, so a recent w
 Rules and **demo** defaults (configurable, not market constants; to be tuned after observing the data):
 
 - `VOLUME_SPIKE`: `quote_volume` of the minute ÷ mean `quote_volume` of the previous 20 windows ≥ `ALERT_VOLUME_SPIKE_FACTOR` (2.0). Active only after `ALERT_WARMUP_MINUTES` (20) of history in the same run. `observed_value` is the ratio, `threshold` the factor, `baseline` the 20-minute mean.
-- `PRICE_MOVE`: `|change_pct|` ≥ `ALERT_PRICE_MOVE_PCT` (0.5). `observed_value` is `change_pct`, in percent.
-- `LARGE_TRADE`: one trade's `quote_volume` ≥ `ALERT_LARGE_TRADE_QUOTE` (100000 USDT). Evaluated on every Silver trade.
+- `PRICE_MOVE`: `|change_pct|` ≥ `ALERT_PRICE_MOVE_PCT` (0.5). `observed_value` is `change_pct`, in percent and `baseline` the previous close. Not raised when the previous window is more than `ALERT_MAX_GAP_MINUTES` (5) older, for example after an outage.
+- `LARGE_TRADE`: one trade's `quote_volume` ≥ `ALERT_LARGE_TRADE_QUOTE` (100000 USDT). Evaluated on every Silver trade by the Silver job.
 
 Index: `(run_id, symbol, event_time desc)` and `(run_id, type, event_time desc)`.
 
