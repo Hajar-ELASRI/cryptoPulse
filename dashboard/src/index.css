@@ -280,6 +280,7 @@ code.cmd { display: block; white-space: pre-wrap; word-break: break-all; font-fa
 .chart-tooltip div { display: flex; justify-content: space-between; gap: var(--space-xl); }
 .legend { display: flex; gap: var(--space-sm) var(--space-xl); flex-wrap: wrap; font-size: 0.8125rem; color: var(--color-muted-foreground); margin-top: var(--space-md); }
 .legend span { display: inline-flex; align-items: center; gap: var(--space-sm); }
+.legend span.legend-note { display: block; }
 .swatch { width: 12px; height: 3px; border-radius: 2px; display: inline-block; }
 
 /* ---------- Landing page ---------- */

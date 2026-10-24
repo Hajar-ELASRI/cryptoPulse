@@ -46,7 +46,7 @@ Goal: show the full flow from raw events to an explained alert on the dashboard,
 |---|---|
 | Binance / RSS unreachable | Use **Replay** (data already in MongoDB) and Analytics on an earlier period. |
 | API down | Restart the dashboard with `VITE_USE_MOCKS=true`: the synthetic fixtures (clearly badged **Demo data**) show every view. |
-| Everything down | Screenshots from step 0.6. |
+| Everything down | Screenshots in `docs/demo-screenshots/` (real data, 24 October 2026: landing, Live, Alerts, Sentiment, Analytics, Replay `replay-btc-demo`). |
 
 ## 3. Live alert on stage (synthetic burst)
 

@@ -43,9 +43,15 @@ export default function MarketCharts({ indicators, alerts = [], symbol, height =
     vol: f.toNum(x.quote_volume),
   }));
   const byWindow = new Map(data.map((d) => [d.window_start, d]));
-  const markers = alerts
-    .map((a) => ({ a, d: byWindow.get(a.window_start) }))
-    .filter((m) => m.d);
+  // One marker per minute, the most telling one: critical first, then volume/price before large trade.
+  // Replays can hold hundreds of alerts; the alert list next to the chart still shows every one.
+  const rank = (a) => (a.severity === "critical" ? 2 : 0) + (a.type === "LARGE_TRADE" ? 0 : 1);
+  const top = new Map();
+  for (const a of alerts) {
+    const d = byWindow.get(a.window_start);
+    if (d && (!top.has(a.window_start) || rank(a) > rank(top.get(a.window_start).a))) top.set(a.window_start, { a, d });
+  }
+  const markers = [...top.values()];
   const tick = (t) => f.time(t, tz);
   const domain = ["dataMin", "dataMax"];
 
@@ -74,7 +80,9 @@ export default function MarketCharts({ indicators, alerts = [], symbol, height =
       <div className="legend">
         <span><i className="swatch" style={{ background: "var(--color-chart-line)" }} /> Close price ({quote})</span>
         <span><i className="swatch" style={{ background: "var(--color-chart-volume)", height: 10 }} /> Quote volume per minute ({quote})</span>
-        <span>Alert markers: <b>V</b> volume spike · <b>P</b> price move · <b>L</b> large trade (amber = warning, red = critical)</span>
+        <span className="legend-note">
+          Alert markers, one per minute: <b>V</b> volume spike, <b>P</b> price move, <b>L</b> large trade; amber is a warning, red is critical.
+        </span>
       </div>
       <details className="data-table">
         <summary>Show data table ({data.length} minutes, {f.tzLabel(tz)})</summary>
