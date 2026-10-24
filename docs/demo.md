@@ -35,7 +35,7 @@ Goal: show the full flow from raw events to an explained alert on the dashboard,
 | 1 | Landing page (`/`): live price, then "How the data moves" (details in `docs/project-context.md` §4) | Sources → Kafka → Spark (Silver/Gold) → MongoDB → API → dashboard. |
 | 2 | A raw `crypto-trades` message and the matching `trades` document | Before/after: types, dedup, `quote_volume`. |
 | 3 | **Live** | One row per symbol and minute; change is close vs previous close; ~2 min delay because of the watermark. |
-| 4 | **Alerts**, filter on a type | Each alert shows observed value, threshold, baseline and the reason sentence; thresholds are demo settings. |
+| 4 | Run the burst (below), then **Alerts** two minutes later, filter on a type | Each alert shows observed value, threshold, baseline and the reason sentence; thresholds are demo settings. Say that the burst is synthetic. |
 | 5 | **Sentiment** | Score/label per article, linked pair, “observed correlation, not cause”, VADER limits. |
 | 6 | **Analytics**, choose a period | Same indicators over a period, alerts on the chart. |
 | 7 | **Replay** → `replay-btc-demo` | Same rules on history, separated by `run_id`; re-running gives identical results. |
@@ -45,11 +45,26 @@ Goal: show the full flow from raw events to an explained alert on the dashboard,
 | Problem | Fallback |
 |---|---|
 | Binance / RSS unreachable | Use **Replay** (data already in MongoDB) and Analytics on an earlier period. |
-| API down | Restart the dashboard with `VITE_USE_MOCKS=true`: the synthetic fixtures (clearly badged **DEMO DATA**) show every view. |
+| API down | Restart the dashboard with `VITE_USE_MOCKS=true`: the synthetic fixtures (clearly badged **Demo data**) show every view. |
 | Everything down | Screenshots from step 0.6. |
 
-## 3. To complete
+## 3. Live alert on stage (synthetic burst)
 
-- API start command and URL (Mossab).
-- A synthetic scenario that triggers an alert live (e.g. a script that publishes a burst of trades to `crypto-trades`), to agree with Hajar and Ali, since it touches ingestion.
-- Final screenshots after integration.
+`scripts/demo_burst.py` publishes a few synthetic trades to `crypto-trades`, priced at the latest close and marked `source: "demo-burst"` (ids `demo-burst:…`), so they can never be mistaken for Binance trades:
+
+```sh
+docker compose run --rm --build --no-deps binance-collector python -m scripts.demo_burst --symbol BTCUSDT --volume-factor 3
+```
+
+- Default: 3 large trades of 150k, 150k and 250k USDT, giving 2 `LARGE_TRADE` warnings and 1 critical.
+- `--volume-factor 3` adds 3x the 20-minute mean volume, giving a `VOLUME_SPIKE` (needs 20 minutes of live data first).
+- No `PRICE_MOVE` is faked: the price stays at the last close.
+- Alerts show up about 2 minutes later (end of the minute plus the Spark watermark).
+
+Tested on 24 October 2026: 43 trades at 15:53 UTC gave `VOLUME_SPIKE` (2.9x the mean) and 3 `LARGE_TRADE` alerts. To clean up after the demo:
+
+```sh
+docker compose exec mongo mongosh --quiet crypto_pulse --eval 'db.trades.deleteMany({source: "demo-burst"})'
+```
+
+Alerts already computed from the burst stay in `alerts`; they read as normal alerts, so mention the burst when showing them.
