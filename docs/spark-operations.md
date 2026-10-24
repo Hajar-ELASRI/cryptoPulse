@@ -39,13 +39,59 @@ docker compose exec mongo mongosh --quiet crypto_pulse --eval 'db.trades_rejecte
 
 Run `docker compose up mongo-init` again once after pulling this change so `trades_rejected` exists.
 
+## Gold: indicators, alerts and replay
+
+| Piece | Where |
+|---|---|
+| One-minute aggregates per symbol (count, base/quote volume, min/max/avg, open/close) | `gold.minute_aggregates` |
+| `change_pct`, previous window, 20-window volume baseline and ratio | `gold.add_context` |
+| `VOLUME_SPIKE`, `PRICE_MOVE` alerts | `gold.window_alerts` |
+| `LARGE_TRADE` alerts (written by the Silver job on every valid trade) | `gold.large_trade_alerts` |
+| Live job, Kafka -> `indicators` | `jobs/indicators_stream.py` (service `spark-indicators`) |
+| Replay of `trades_history` | `jobs/replay.py` |
+
+Both modes call `mongo_sink.process_windows`, which reads up to 20 earlier windows of the same run from `indicators` and applies the same functions, so live and replay follow identical rules.
+
+Worked example (one minute): trades 100 × 1, 102 × 2, 98 × 1 give `trade_count 3`, `base_volume 4`, `quote_volume 402`, min 98, max 102, `avg_price 100`, open 100, close 98. If the previous close was 100 the next minute closing at 101 has `change_pct = 100 × (101 − 100) / 100 = 1.0`. If the previous 20 minutes averaged 1,000 USDT and this minute traded 3,000 USDT, the ratio is 3.0 and a `VOLUME_SPIKE` is raised (threshold 2.0).
+
+Thresholds are environment variables with demo defaults: `ALERT_VOLUME_SPIKE_FACTOR=2.0`, `ALERT_VOLUME_LOOKBACK_MINUTES=20`, `ALERT_WARMUP_MINUTES=20`, `ALERT_PRICE_MOVE_PCT=0.5`, `ALERT_LARGE_TRADE_QUOTE=100000`, `ALERT_MAX_GAP_MINUTES=5`, `GOLD_WATERMARK=1 minute`. They are starting points to tune after looking at real data.
+
+### Run live
+
+```sh
+docker compose --profile spark up -d --build spark-trades
+docker compose --profile spark up -d spark-indicators     # start after spark-trades has fetched the Kafka jar
+docker compose logs -f spark-indicators
+```
+
+Windows appear about two minutes after their minute, and a trade later than the Gold watermark is not counted in its indicator (it is still in `trades`). With the 1 GB worker, run at most these two jobs next to each other.
+
+### Replay a period
+
+```sh
+docker compose --profile spark run --rm --no-deps spark-trades /opt/spark/bin/spark-submit \
+  --master 'local[2]' --conf spark.sql.shuffle.partitions=4 \
+  /opt/cryptopulse/cryptopulse_spark/jobs/replay.py \
+  --run-id replay-btc-demo --symbols BTCUSDT --start 2026-07-01T00:00:00Z --end 2026-07-01T06:00:00Z
+```
+
+The run id must start with `replay-`. Output goes to `indicators` and `alerts` with `mode: "replay"` and that `run_id`; the job first deletes that run's documents, so repeating the command gives the same result. Live documents are never touched. Trades are loaded in chunks (`--chunk-minutes`, default 30) aligned to minutes, and context for the 20-window baseline is carried between chunks through MongoDB. It needs data in `trades_history` (see the ingestion runbook); a replay of 701 synthetic trades ran in about 12 s.
+
+Inspect:
+
+```sh
+docker compose exec mongo mongosh --quiet crypto_pulse --eval 'db.alerts.find({run_id:"replay-btc-demo"}).sort({event_time:1}).limit(5)'
+```
+
+Run `docker compose up mongo-init` once after pulling this change to create the new indexes.
+
 ### Tests
 
 ```sh
 docker compose --profile test run --rm --build spark-test
 ```
 
-Runs the Silver tests in the Spark image with a local Spark session (includes a streaming deduplication test and, with Mongo up, an idempotent upsert test).
+Runs the Silver and Gold tests in the Spark image with a local Spark session: hand-computed aggregates, change and spike rules, a streaming dedup/window test and, with Mongo up, idempotent upserts. Stop the live jobs first; the test JVM can run out of memory next to them.
 
 ### Local port clashes
 

@@ -7,9 +7,11 @@ import argparse
 import logging
 import time
 
+from datetime import datetime
+
 from pyspark.sql import SparkSession
 
-from cryptopulse_spark import mongo_sink, silver
+from cryptopulse_spark import gold, mongo_sink, silver
 from cryptopulse_spark.config import Settings
 
 LOG = logging.getLogger("trades_stream")
@@ -30,6 +32,7 @@ def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
 
     settings = Settings.from_env()
+    params = gold.AlertParams.from_env()
     spark = build_session()
     database = mongo_sink.connect(settings.mongo_uri, settings.mongo_database)
 
@@ -46,10 +49,12 @@ def main() -> None:
 
     def write_batch(batch, batch_id: int) -> None:
         started = time.monotonic()
-        valid, rejected = mongo_sink.write_silver_batch(
-            database, silver.silver_trades(batch), silver.rejected_trades(batch))
-        LOG.info("batch %s: %s trades upserted, %s rejected, %.1fs",
-                 batch_id, valid, rejected, time.monotonic() - started)
+        trades = silver.silver_trades(batch)
+        valid, rejected = mongo_sink.write_silver_batch(database, trades, silver.rejected_trades(batch))
+        large = mongo_sink.write_large_trade_alerts(
+            database, gold.large_trade_alerts(trades, params), "live", "live", datetime.utcnow())
+        LOG.info("batch %s: %s trades upserted, %s rejected, %s large-trade alerts, %.1fs",
+                 batch_id, valid, rejected, large, time.monotonic() - started)
 
     writer = (
         parsed.writeStream.foreachBatch(write_batch)
