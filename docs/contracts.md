@@ -109,9 +109,13 @@ Rules and **demo** defaults (configurable, not market constants; to be tuned aft
 
 Index: `(run_id, symbol, event_time desc)` and `(run_id, type, event_time desc)`.
 
-### Not yet specified
+### `news`, `social_posts`, `sentiment` (editorial)
 
-`news`, `social_posts` and `sentiment` Silver documents, and the mapping between sentiment assets (`BTC`) and trade pairs (`BTCUSDT`), will be proposed in a follow-up PR once the trade pipeline is in.
+`_id` = `event_id`; idempotent upserts. Timestamps are BSON dates, plus `stored_at` (Spark write time). Messages without `event_id` or a valid `event_time` go to `editorial_rejected` (`reason`, `raw`, `topic`, `partition`, `offset`, `rejected_at`); news/posts with an empty title and sentiment with an unknown label, a score outside [-1, 1] or no `source_event_id` are dropped.
+
+- `news`: `event_id`, `source`, `title` (trimmed), `summary`, `url`, `event_time`, `published_at`, `ingested_at`, `stored_at`.
+- `social_posts`: `event_id`, `source`, `subreddit`, `title`, `text`, `url`, `score` (long), `num_comments` (long), `event_time`, `ingested_at`, `stored_at`.
+- `sentiment`: `event_id`, `source_event_id`, `source_topic`, `source`, `symbols` (assets such as `BTC`), `trade_symbols` (pairs such as `BTCUSDT`), `label`, `score` (double, VADER compound), `model`, `event_time`, `processed_at` (sentiment service), `stored_at`. `trade_symbols` is each asset plus `USDT`, so the API can join sentiment to `indicators` by symbol and time. Sentiment is an observed association, not a cause.
 
 ### Open questions for the team
 
@@ -119,3 +123,4 @@ Index: `(run_id, symbol, event_time desc)` and `(run_id, type, event_time desc)`
 2. Is the live/replay separation by `run_id` and `mode` acceptable for the API and dashboard?
 3. Are the demo thresholds a good start, and who tunes them?
 4. Is `Decimal128` acceptable for Mossab, or should the API contract expect strings?
+5. Is `trade_symbols` (asset + `USDT`) the right way to link sentiment to trade pairs?
