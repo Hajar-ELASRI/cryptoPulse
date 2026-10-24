@@ -13,7 +13,7 @@ function Summary({ s, symbol }) {
   return (
     <div className="stats">
       <Stat label="Change over the period" value={<Change value={s.change_pct} />} sub={`${f.price(s.open_price)} → ${f.price(s.close_price)} ${quote}`} />
-      <Stat label={`Range (${quote})`} value={<span style={{ fontSize: "1rem" }}>{f.price(s.min_price)} – {f.price(s.max_price)}</span>} sub="Lowest and highest trade" />
+      <Stat label={`Range (${quote})`} value={<span className="stat-value-sm">{f.price(s.min_price)} – {f.price(s.max_price)}</span>} sub="Lowest and highest trade" />
       <Stat label={`Total volume (${quote})`} value={f.compact(s.quote_volume)} sub={`${f.integer(s.trade_count)} trades`} />
       <Stat label="Alerts" value={f.integer((ac.VOLUME_SPIKE || 0) + (ac.PRICE_MOVE || 0) + (ac.LARGE_TRADE || 0))} sub={`${ac.VOLUME_SPIKE || 0} volume · ${ac.PRICE_MOVE || 0} price · ${ac.LARGE_TRADE || 0} large trade`} />
       {se && (

@@ -44,10 +44,10 @@ export default function Replay() {
               {list.map((r) => (
                 <button key={r.run_id} type="button" className="run" aria-pressed={r.run_id === runId} onClick={() => { setRunId(r.run_id); setSymbol(""); }}>
                   <span className="run-id">{r.run_id}</span>
-                  <span className="muted" style={{ fontSize: "0.8125rem" }}>
+                  <span className="muted text-sm">
                     {f.dateTime(r.start, tz)} → {f.dateTime(r.end, tz)} {f.tzLabel(tz)}
                   </span>
-                  <span style={{ fontSize: "0.8125rem" }}>
+                  <span className="text-sm">
                     {(r.symbols || []).join(", ")} · {f.integer(r.indicator_count)} windows · {f.integer(r.alert_count)} alerts
                   </span>
                 </button>

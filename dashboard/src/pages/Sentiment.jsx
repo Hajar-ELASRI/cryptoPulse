@@ -50,7 +50,7 @@ export default function Sentiment() {
                   {f.dateTime(rows[rows.length - 1].event_time, tz)} → {f.dateTime(rows[0].event_time, tz)} {f.tzLabel(tz)}
                 </span>
               </div>
-              <ul className="news" style={{ listStyle: "none", margin: 0, padding: 0 }}>
+              <ul className="news plain-list">
                 {rows.map((s) => (
                   <li key={s.event_id} className="news-item">
                     <div>
@@ -69,7 +69,7 @@ export default function Sentiment() {
                     </div>
                     <div className="score">
                       <SentimentLabel value={s.label} />
-                      <span className="num" style={{ fontSize: "0.875rem" }}>score {f.decimal(s.score, 2)}</span>
+                      <span className="num score-value">score {f.decimal(s.score, 2)}</span>
                       <ScoreBar score={s.score} />
                     </div>
                   </li>

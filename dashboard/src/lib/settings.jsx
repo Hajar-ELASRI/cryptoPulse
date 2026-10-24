@@ -2,6 +2,7 @@ import { createContext, useContext, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
 const TzContext = createContext({ tz: "UTC", setTz: () => {} });
+const PauseContext = createContext({ paused: false, setPaused: () => {} });
 
 function readTz() {
   try {
@@ -21,10 +22,18 @@ export function TzProvider({ children }) {
       /* storage unavailable */
     }
   };
-  return <TzContext.Provider value={{ tz, setTz }}>{children}</TzContext.Provider>;
+  // Auto-refresh pause is not stored: a reload always starts live.
+  const [paused, setPaused] = useState(false);
+  return (
+    <TzContext.Provider value={{ tz, setTz }}>
+      <PauseContext.Provider value={{ paused, setPaused }}>{children}</PauseContext.Provider>
+    </TzContext.Provider>
+  );
 }
 
 export const useTz = () => useContext(TzContext);
+/** Pause/resume for every background poll (chart guidance: live views need a pause control). */
+export const usePaused = () => useContext(PauseContext);
 
 /** A filter kept in the URL (?symbol=…) so views can be shared and survive reloads. */
 export function useParam(name, fallback = "") {

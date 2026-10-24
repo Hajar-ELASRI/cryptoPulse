@@ -13,7 +13,7 @@ function Marker({ cx, cy, payload }) {
   return (
     <g>
       <circle cx={cx} cy={cy} r={9} fill={critical ? "var(--color-critical)" : "var(--color-warning)"} stroke="var(--color-background)" strokeWidth={2} />
-      <text x={cx} y={cy + 4} textAnchor="middle" fontSize={10} fontWeight={700} fill="#0f172a">{MARK[payload.type]}</text>
+      <text x={cx} y={cy + 4} textAnchor="middle" fontSize={10} fontWeight={700} fill="var(--color-on-primary)">{MARK[payload.type]}</text>
     </g>
   );
 }
@@ -67,7 +67,7 @@ export default function MarketCharts({ indicators, alerts = [], symbol, height =
         <BarChart data={data} margin={{ top: 4, right: 12, bottom: 0, left: 0 }} syncId="market">
           <XAxis dataKey="t" type="number" scale="time" domain={domain} tickFormatter={tick} {...axis} minTickGap={40} hide />
           <YAxis tickFormatter={(v) => f.compact(v)} width={84} {...axis} />
-          <Tooltip content={<TooltipBox tz={tz} quote={quote} />} cursor={{ fill: "rgba(255,255,255,0.04)" }} />
+          <Tooltip content={<TooltipBox tz={tz} quote={quote} />} cursor={{ fill: "var(--tint-hover)" }} />
           <Bar dataKey="vol" fill="var(--color-chart-volume)" isAnimationActive={!reduced} name="Quote volume" />
         </BarChart>
       </ResponsiveContainer>

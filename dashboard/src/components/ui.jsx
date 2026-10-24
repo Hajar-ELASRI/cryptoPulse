@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { SYMBOLS, USE_MOCKS } from "../api";
 import * as f from "../lib/format";
-import { useTz } from "../lib/settings";
-import { AlertOctagon, AlertTriangle, ArrowDown, ArrowUp, Flask, Inbox, Info, Minus, Refresh } from "./Icons";
+import { usePaused, useTz } from "../lib/settings";
+import { AlertOctagon, AlertTriangle, ArrowDown, ArrowUp, Flask, Inbox, Info, Minus, Pause, Play, Refresh } from "./Icons";
 
 export function PageHead({ title, description, children }) {
   return (
@@ -165,22 +165,29 @@ export function Async({ q, isEmpty, empty, height, children }) {
 
 export function LastUpdated({ q, refreshMs }) {
   const { tz } = useTz();
+  const { paused, setPaused } = usePaused();
   const [, tick] = useState(0);
   useEffect(() => {
     const t = setInterval(() => tick((n) => n + 1), 10000);
     return () => clearInterval(t);
   }, []);
   return (
-    <div className="status" aria-live="polite">
-      {q.error && q.data ? (
-        <span className="down">Refresh failed: {q.error.message}.</span>
-      ) : null}
+    <div className="status">
+      {/* Only failures are announced; the timestamp changes every poll and would be noise. */}
+      <span role="status" aria-live="polite">
+        {q.error && q.data ? <span className="down">Refresh failed: {q.error.message}.</span> : null}
+      </span>
       <span>
         Last updated <span className="num">{q.lastUpdated ? f.timeSec(q.lastUpdated, tz) : "—"}</span> {f.tzLabel(tz)}
-        {refreshMs ? ` · every ${Math.round(refreshMs / 1000)} s` : ""}
+        {refreshMs ? (paused ? " · auto-refresh paused" : ` · every ${Math.round(refreshMs / 1000)} s`) : ""}
       </span>
-      <button type="button" className="btn" onClick={q.reload} aria-label="Refresh now" style={{ minHeight: 32, padding: "0 10px" }}>
-        <Refresh size={14} />
+      {refreshMs ? (
+        <button type="button" className="btn btn-icon" onClick={() => setPaused(!paused)} aria-pressed={paused} aria-label={paused ? "Resume auto-refresh" : "Pause auto-refresh"} title={paused ? "Resume auto-refresh" : "Pause auto-refresh"}>
+          {paused ? <Play size={16} /> : <Pause size={16} />}
+        </button>
+      ) : null}
+      <button type="button" className="btn btn-icon" onClick={q.reload} aria-label="Refresh now" title="Refresh now">
+        <Refresh size={16} />
       </button>
     </div>
   );

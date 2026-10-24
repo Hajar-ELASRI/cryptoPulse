@@ -27,7 +27,7 @@
 | On Accent/CTA | `#000000` | `--color-on-accent` |
 | Background | `#0F172A` | `--color-background` |
 | Foreground | `#F8FAFC` | `--color-foreground` |
-| Card | `#222735` | `--color-card` |
+| Card | `#1B2130` | `--color-card` |
 | Card Foreground | `#F8FAFC` | `--color-card-foreground` |
 | Muted | `#272F42` | `--color-muted` |
 | Muted Foreground | `#94A3B8` | `--color-muted-foreground` |

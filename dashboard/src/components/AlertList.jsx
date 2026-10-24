@@ -6,7 +6,7 @@ import { Severity } from "./ui";
 export default function AlertList({ alerts, compact = false }) {
   const { tz } = useTz();
   return (
-    <ul className="alert-list" style={{ listStyle: "none", margin: 0, padding: 0 }}>
+    <ul className="alert-list plain-list">
       {alerts.map((a) => {
         const type = f.ALERT_TYPES[a.type] || { label: a.type, rule: "" };
         return (

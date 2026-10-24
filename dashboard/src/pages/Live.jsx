@@ -31,7 +31,7 @@ export default function Live() {
               <Stat label="Change vs previous window" value={<Change value={last.change_pct} />} sub={last.prev_window_start ? `Close vs close of ${f.time(last.prev_window_start, tz)}` : "No previous window"} />
               <Stat label={`Volume this minute (${quote})`} value={f.compact(last.quote_volume)} sub={`${f.decimal(last.base_volume, 4)} ${base}`} />
               <Stat label="Trades this minute" value={f.integer(last.trade_count)} sub={`Avg price ${f.price(last.avg_price)}`} />
-              <Stat label={`Min / max (${quote})`} value={<span style={{ fontSize: "1rem" }}>{f.price(last.min_price)} / {f.price(last.max_price)}</span>} sub="Within this minute" />
+              <Stat label={`Min / max (${quote})`} value={<span className="stat-value-sm">{f.price(last.min_price)} / {f.price(last.max_price)}</span>} sub="Within this minute" />
             </div>
           );
         }}

@@ -1,15 +1,18 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { usePaused } from "./settings";
 
 /**
  * Loads data with loading / error / last-updated state.
- * `refreshMs` polls in the background (paused while the tab is hidden) and keeps the
- * previous data on screen during a refresh, so nothing flickers.
+ * `refreshMs` polls in the background (skipped while the tab is hidden or the user paused
+ * auto-refresh) and keeps the previous data on screen during a refresh, so nothing flickers.
  */
 export function useApi(fetcher, deps, { refreshMs = 0, enabled = true } = {}) {
   const [state, setState] = useState({ data: null, error: null, loading: enabled, lastUpdated: null });
   const fetcherRef = useRef(fetcher);
   fetcherRef.current = fetcher;
   const ctrlRef = useRef(null);
+  const { paused } = usePaused();
+  const pausedRef = useRef(paused);
 
   const load = useCallback(async (background = false) => {
     ctrlRef.current?.abort();
@@ -34,7 +37,7 @@ export function useApi(fetcher, deps, { refreshMs = 0, enabled = true } = {}) {
     let timer;
     if (refreshMs > 0) {
       timer = setInterval(() => {
-        if (document.visibilityState === "visible") load(true);
+        if (document.visibilityState === "visible" && !pausedRef.current) load(true);
       }, refreshMs);
     }
     return () => {
@@ -43,6 +46,13 @@ export function useApi(fetcher, deps, { refreshMs = 0, enabled = true } = {}) {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [...deps, enabled, refreshMs, load]);
+
+  // On resume, catch up at once instead of waiting for the next tick.
+  useEffect(() => {
+    const wasPaused = pausedRef.current;
+    pausedRef.current = paused;
+    if (wasPaused && !paused && enabled && refreshMs > 0) load(true);
+  }, [paused, enabled, refreshMs, load]);
 
   return { ...state, reload: () => load(false) };
 }

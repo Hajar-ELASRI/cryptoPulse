@@ -20,4 +20,6 @@ export const Info = (p) => <Svg {...p}><circle cx="12" cy="12" r="10" /><path d=
 export const Flask = (p) => <Svg {...p}><path d="M10 2v7.31M14 9.3V2M8.5 2h7M14 9.3a6.5 6.5 0 1 1-4 0" /><path d="M5.52 16h12.96" /></Svg>;
 export const Inbox = (p) => <Svg {...p}><path d="M22 12h-6l-2 3h-4l-2-3H2" /><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" /></Svg>;
 export const Zap = (p) => <Svg {...p}><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z" /></Svg>;
-export const Pulse = (p) => <Svg {...p}><path d="M3 12h4l2-6 4 12 2-6h6" /></Svg>;
+export const Pause = (p) => <Svg {...p}><rect x="14" y="4" width="4" height="16" rx="1" /><rect x="6" y="4" width="4" height="16" rx="1" /></Svg>;
+export const Play = (p) => <Svg {...p}><path d="M6 3l14 9-14 9V3z" /></Svg>;
+export const Pulse =(p) => <Svg {...p}><path d="M3 12h4l2-6 4 12 2-6h6" /></Svg>;
