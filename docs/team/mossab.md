@@ -1,5 +1,7 @@
 # Brief de travail — Mossab
 
+> Implémentation locale : [`backend/`](../../backend/) ; lancement, contrat REST et exemples pour Mohammed dans le [guide API](../api.md). L'API utilise les sorties Spark d'Ali récupérées depuis `main` (`2ff9e21`) et les besoins frontend de Mohammed. La validation réelle Spark/Mongo/React et la revue d'équipe restent à effectuer.
+
 ## Mission attribuée
 
 Construire l'API backend Spring Boot pour CryptoPulse. Cette répartition parmi les trois chantiers encore libres (Spark, API, frontend) a été tirée au hasard; Hajar conserve l'ingestion déjà commencée.

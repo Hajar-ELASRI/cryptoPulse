@@ -7,4 +7,5 @@ tmp/
 data/
 *.zip
 *.csv
+backend/target/
 
