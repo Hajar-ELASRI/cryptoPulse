@@ -85,6 +85,19 @@ docker compose exec mongo mongosh --quiet crypto_pulse --eval 'db.alerts.find({r
 
 Run `docker compose up mongo-init` once after pulling this change to create the new indexes.
 
+## News, social posts and sentiment
+
+`jobs/editorial_stream.py` (service `spark-editorial`) reads `crypto-news`, `crypto-social` and `crypto-sentiment` and upserts `news`, `social_posts` and `sentiment` (`_id` = `event_id`). Messages are validated on `event_id` and `event_time`, deduplicated by `event_id` (watermark 1 day, since RSS republishes), and typed per topic. News and posts need a non-empty title; sentiment needs a label in `positive/neutral/negative`, a score in [-1, 1] and a `source_event_id`. Rejected messages go to `editorial_rejected` with the reason and raw text. Every document has `stored_at` (Spark write time).
+
+`sentiment` also gets `trade_symbols`: each asset in `symbols` plus `USDT` (`BTC` becomes `BTCUSDT`), so the API can join sentiment to `indicators`. This is a convention (all tracked pairs are quoted in USDT) for the team to confirm.
+
+```sh
+docker compose --profile spark up -d --build spark-editorial
+docker compose exec mongo mongosh --quiet crypto_pulse --eval 'db.sentiment.find({"symbols.0":{$exists:true}}).sort({event_time:-1}).limit(3)'
+```
+
+Checked on a live run: 55 RSS articles and 55 sentiment events became 55 `news` and 55 `sentiment` documents with none rejected. No Reddit data was available (no credentials), so `social_posts` is covered by unit tests only.
+
 ### Tests
 
 ```sh
