@@ -4,7 +4,7 @@ Infrastructure and ingestion for the Big Data project. Hajar owns Binance Spot t
 
 Start with the [complete project context](docs/project-context.md), then open the [team member briefs](docs/team/README.md). The original work plan and transformation notes are in [docs/plan-travail.md](docs/plan-travail.md).
 
-The Spark pipeline is described in [docs/spark-operations.md](docs/spark-operations.md). See the [ingestion runbook](docs/ingestion-operations.md) for operational checks, bounded history imports and connection details, and the [validation report](docs/validation-ingestion.md) for the verified state.
+Work happens on branches named by the [branch convention](docs/branching.md) and merges into `main`. The Spark pipeline is described in [docs/spark-operations.md](docs/spark-operations.md). See the [ingestion runbook](docs/ingestion-operations.md) for operational checks, bounded history imports and connection details, and the [validation report](docs/validation-ingestion.md) for the verified state.
 
 ## Start
 

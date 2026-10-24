@@ -1,4 +1,4 @@
-# Branch and PR convention (proposal)
+# Branch and PR convention
 
 Short, so the repository stays readable with four people pushing to it.
 
@@ -16,7 +16,7 @@ Areas: `ingestion`, `spark`, `api`, `dashboard`, `infra`.
 
 ## Rules
 
-- Branch from the integration branch. There is no `develop` or `main` yet; until the team creates them (the coordinator's decision), open PRs against `codex/person-a-ingestion`.
+- `main` is the integration branch and holds the complete app. Branch from `main` and open PRs against `main`; review by another member before merging.
 - One topic per branch and per PR. Several small PRs beat one large one.
 - Never push to someone else's branch. Ask them, or open a PR into it.
 - A stacked PR (built on an unmerged PR) uses that PR's branch as its base and says so in its description. Merge from the bottom up and retarget the next PR when the one below merges. Do not rename or delete a branch while another PR is based on it: GitHub closes the dependent PR.
@@ -24,12 +24,16 @@ Areas: `ingestion`, `spark`, `api`, `dashboard`, `infra`.
 - Commit messages start with `feat:`, `fix:` or `docs:`.
 - PR description: what changed, how to run it, what was checked, what was not.
 
-## Current branches
+## Branches at the creation of `main`
 
-| Branch | Owner | State |
+`main` was created from `codex/person-a-ingestion` and received, by merge commits, the four Spark branches and the two documentation branches. Nothing was deleted; the branches below stay as history and can be removed by their owner once no open PR is based on them.
+
+| Branch | Owner | Content |
 |---|---|---|
-| `codex/person-a-ingestion` | Hajar | ingestion base. The name predates this convention; renaming is Hajar's call and must wait until no PR is based on it. |
-| `docs/spark-output-contracts` | Ali | PR 1 |
-| `feature/spark-silver-trades` | Ali | PR 2 |
-| `feature/spark-gold-indicators` | Ali | PR 3, based on PR 2 |
-| `feature/spark-editorial` | Ali | PR 4, based on PR 3 |
+| `main` | team | everything below, the complete app |
+| `codex/person-a-ingestion` | Hajar | ingestion and infrastructure (name predates the convention) |
+| `docs/spark-output-contracts` | Ali | Spark output contracts |
+| `feature/spark-silver-trades` | Ali | Silver trades job |
+| `feature/spark-gold-indicators` | Ali | Gold indicators, alerts, replay |
+| `feature/spark-editorial` | Ali | news, social posts, sentiment |
+| `docs/branch-convention` | Ali | this document |
