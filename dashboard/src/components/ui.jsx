@@ -1,8 +1,19 @@
 import { useEffect, useState } from "react";
 import { SYMBOLS, USE_MOCKS } from "../api";
 import * as f from "../lib/format";
-import { usePaused, useTz } from "../lib/settings";
-import { AlertOctagon, AlertTriangle, ArrowDown, ArrowUp, Flask, Inbox, Info, Minus, Pause, Play, Refresh } from "./Icons";
+import { usePaused, useTheme, useTz } from "../lib/settings";
+import { AlertOctagon, AlertTriangle, ArrowDown, ArrowUp, Flask, Inbox, Info, Minus, Moon, Pause, Play, Refresh, Sun } from "./Icons";
+
+/** Switches between the dark and light theme; the icon shows the theme you will get. */
+export function ThemeToggle() {
+  const { theme, toggleTheme } = useTheme();
+  const label = theme === "dark" ? "Switch to light theme" : "Switch to dark theme";
+  return (
+    <button type="button" className="btn btn-icon btn-quiet" onClick={toggleTheme} aria-label={label} title={label}>
+      {theme === "dark" ? <Sun /> : <Moon />}
+    </button>
+  );
+}
 
 export function PageHead({ title, description, children }) {
   return (
@@ -108,7 +119,7 @@ export function DemoBadge() {
   if (!USE_MOCKS) return null;
   return (
     <span className="badge badge-demo" title="Synthetic demo data, not market data. Set VITE_USE_MOCKS=false to use the API.">
-      <Flask size={12} /> DEMO DATA
+      <Flask size={12} /> Demo data
     </span>
   );
 }

@@ -40,7 +40,7 @@ export default function Live() {
       <div className="grid-2">
         <section className="card" aria-labelledby="chart-title">
           <div className="card-head">
-            <h2 id="chart-title">{symbol} · last 60 minutes</h2>
+            <h2 id="chart-title">{symbol}, last 60 minutes</h2>
             <span className="hint">One point per one-minute window, {f.tzLabel(tz)}</span>
           </div>
           <Async q={live} height={370} empty={<Empty />}>
@@ -51,7 +51,7 @@ export default function Live() {
         <section className="card" aria-labelledby="recent-alerts">
           <div className="card-head">
             <h2 id="recent-alerts">Latest alerts</h2>
-            <Link to={`/alerts?symbol=${symbol}`} className="hint">See all</Link>
+            <Link to={`/app/alerts?symbol=${symbol}`} className="hint">See all alerts</Link>
           </div>
           <Async q={alerts} height={200} empty={<Empty title="No alerts">No threshold crossed for {symbol} recently.</Empty>}>
             {(rows) => <AlertList alerts={rows.slice(0, 5)} compact />}

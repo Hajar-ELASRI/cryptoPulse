@@ -12,8 +12,8 @@ function Marker({ cx, cy, payload }) {
   const critical = payload.severity === "critical";
   return (
     <g>
-      <circle cx={cx} cy={cy} r={9} fill={critical ? "var(--color-critical)" : "var(--color-warning)"} stroke="var(--color-background)" strokeWidth={2} />
-      <text x={cx} y={cy + 4} textAnchor="middle" fontSize={10} fontWeight={700} fill="var(--color-on-primary)">{MARK[payload.type]}</text>
+      <circle cx={cx} cy={cy} r={9} fill={critical ? "var(--marker-critical)" : "var(--marker-warning)"} stroke="var(--color-card)" strokeWidth={2} />
+      <text x={cx} y={cy + 4} textAnchor="middle" fontSize={10} fontWeight={700} fill="var(--marker-text)">{MARK[payload.type]}</text>
     </g>
   );
 }

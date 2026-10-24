@@ -7,228 +7,107 @@
 ---
 
 **Project:** CryptoPulse
-**Generated:** 2026-10-24 13:29:01
-**Category:** Fintech/Crypto
-**Design Dials:** Variance 3/10 (Centered / Minimal) | Motion 3/10 (Subtle) | Density 8/10 (Dense / Dashboard)
+**Revised:** 2026-10-24 (second version: new palette, light theme, landing page)
+**Category:** Fintech/Crypto, real-time monitoring dashboard
+**Audience:** the project jury and the team during the demo; anyone watching BTC/ETH minute by minute.
+**Primary job:** show what the market is doing now and explain why each alert fired.
+
+Accessibility and interaction rules come from ui-ux-pro-max (priority order: accessibility, touch, performance, style, layout, type and colour, motion, forms, navigation, charts).
 
 ---
 
-## Global Rules
+## Principles
 
-### Color Palette
-
-| Role | Hex | CSS Variable |
-|------|-----|--------------|
-| Primary | `#F59E0B` | `--color-primary` |
-| On Primary | `#0F172A` | `--color-on-primary` |
-| Secondary | `#FBBF24` | `--color-secondary` |
-| On Secondary | `#0F172A` | `--color-on-secondary` |
-| Accent/CTA | `#8B5CF6` | `--color-accent` |
-| On Accent/CTA | `#000000` | `--color-on-accent` |
-| Background | `#0F172A` | `--color-background` |
-| Foreground | `#F8FAFC` | `--color-foreground` |
-| Card | `#1B2130` | `--color-card` |
-| Card Foreground | `#F8FAFC` | `--color-card-foreground` |
-| Muted | `#272F42` | `--color-muted` |
-| Muted Foreground | `#94A3B8` | `--color-muted-foreground` |
-| Border | `#334155` | `--color-border` |
-| Destructive | `#EF4444` | `--color-destructive` |
-| On Destructive | `#000000` | `--color-on-destructive` |
-| Ring | `#F59E0B` | `--color-ring` |
-
-**Color Notes:** Gold trust + purple tech
-
-### Typography
-
-- **Heading Font:** Fira Code
-- **Body Font:** Fira Sans
-- **Mood:** dashboard, data, analytics, code, technical, precise
-- **Google Fonts:** [Fira Code + Fira Sans](https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Fira+Sans:wght@300;400;500;600;700&display=swap)
-
-**CSS Import:**
-```css
-@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Fira+Sans:wght@300;400;500;600;700&display=swap');
-```
-
-### Spacing Variables
-
-*Density: 8/10 — Dense / Dashboard*
-
-| Token | Value | Usage |
-|-------|-------|-------|
-| `--space-xs` | `2px` / `0.125rem` | Tight gaps |
-| `--space-sm` | `4px` / `0.25rem` | Icon gaps, inline spacing |
-| `--space-md` | `8px` / `0.5rem` | Standard padding |
-| `--space-lg` | `12px` / `0.75rem` | Section padding |
-| `--space-xl` | `16px` / `1rem` | Large gaps |
-| `--space-2xl` | `24px` / `1.5rem` | Section margins |
-| `--space-3xl` | `32px` / `2rem` | Hero padding |
-
-### Shadow Depths
-
-| Level | Value | Usage |
-|-------|-------|-------|
-| `--shadow-sm` | `0 1px 2px rgba(0,0,0,0.05)` | Subtle lift |
-| `--shadow-md` | `0 4px 6px rgba(0,0,0,0.1)` | Cards, buttons |
-| `--shadow-lg` | `0 10px 15px rgba(0,0,0,0.1)` | Modals, dropdowns |
-| `--shadow-xl` | `0 20px 25px rgba(0,0,0,0.15)` | Hero images, featured cards |
+1. **One memorable element.** The landing hero is the live BTC price set large, with its last hour drawn underneath. It is the only animation that plays without user action (the line draws once on load). Everything else stays quiet.
+2. **Numbers first.** Figures use tabular digits so they do not jump on refresh. Labels are short, in sentence case, never all caps.
+3. **Colour has a meaning.** Green and red are reserved for up and down; amber and red markers for warning and critical alerts. Each one is always paired with an arrow, icon or letter.
+4. **Structure carries information.** Key figures sit in one strip split by hairlines instead of separate cards. Numbered markers are used only for a real sequence (the data pipeline).
+5. **Both themes are first class.** Every colour is a CSS variable defined once per theme. Components never name a colour directly.
 
 ---
 
-## Component Specs
+## Colour
 
-### Buttons
+Set by `data-theme` on `<html>`: saved choice (`localStorage` key `cp.theme`), otherwise the system preference. A script in `index.html` applies it before first paint.
 
-```css
-/* Primary Button */
-.btn-primary {
-  background: #8B5CF6;
-  color: #000000;
-  padding: 12px 24px;
-  border-radius: 8px;
-  font-weight: 600;
-  transition: all 200ms ease;
-  cursor: pointer;
-}
+| Role | Night (dark) | Day (light) | CSS variable |
+|---|---|---|---|
+| Page background | `#10141B` graphite | `#F3F5F9` cool paper | `--color-background` |
+| Panel | `#171C25` | `#FFFFFF` | `--color-card` |
+| Raised / track | `#1F2631` | `#E9EDF4` | `--color-muted` |
+| Text | `#EEF1F6` | `#131925` | `--color-foreground` |
+| Secondary text | `#9AA3B2` | `#566173` | `--color-muted-foreground` |
+| Hairline | `#2A3240` | `#DCE1EA` | `--color-border` |
+| Accent (links, active, primary button, price line) | `#93A8FF` periwinkle | `#3450D6` indigo | `--color-primary` |
+| Text on accent | `#10141B` | `#FFFFFF` | `--color-on-primary` |
+| Up | `#3CCB8E` | `#08774D` | `--color-up` |
+| Down / critical | `#FF7070` | `#C62F3B` | `--color-down`, `--color-critical` |
+| Warning | `#F5B544` | `#8F5B00` | `--color-warning` |
 
-.btn-primary:hover {
-  opacity: 0.9;
-  transform: translateY(-1px);
-}
+Chart alert markers keep the same fill in both themes (`--marker-warning #F5B544`, `--marker-critical #FF7070`) with a dark letter (`--marker-text #10141B`).
 
-/* Secondary Button */
-.btn-secondary {
-  background: transparent;
-  color: #F59E0B;
-  border: 2px solid #F59E0B;
-  padding: 12px 24px;
-  border-radius: 8px;
-  font-weight: 600;
-  transition: all 200ms ease;
-  cursor: pointer;
-}
-```
-
-### Cards
-
-```css
-.card {
-  background: #0F172A;
-  border-radius: 12px;
-  padding: 24px;
-  box-shadow: var(--shadow-md);
-  transition: all 200ms ease;
-  cursor: pointer;
-}
-
-.card:hover {
-  box-shadow: var(--shadow-lg);
-  transform: translateY(-2px);
-}
-```
-
-### Inputs
-
-```css
-.input {
-  padding: 12px 16px;
-  border: 1px solid #E2E8F0;
-  border-radius: 8px;
-  font-size: 16px;
-  transition: border-color 200ms ease;
-}
-
-.input:focus {
-  border-color: #F59E0B;
-  outline: none;
-  box-shadow: 0 0 0 3px #F59E0B20;
-}
-```
-
-### Modals
-
-```css
-.modal-overlay {
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(4px);
-}
-
-.modal {
-  background: white;
-  border-radius: 16px;
-  padding: 32px;
-  box-shadow: var(--shadow-xl);
-  max-width: 500px;
-  width: 90%;
-}
-```
+All text pairs measured at 4.5:1 or more on background, panel and raised surfaces in both themes.
 
 ---
 
-## Style Guidelines
+## Typography
 
-**Style:** Minimalism & Swiss Style
+| Role | Family | Use |
+|---|---|---|
+| Display | **Bricolage Grotesque** (variable, optical size 96 for large sizes) | Headlines, page titles, the hero price |
+| Text and figures | **IBM Plex Sans** 400/500/600, `font-variant-numeric: tabular-nums` for numbers | Everything else |
+| Code | **IBM Plex Mono** | Shell commands and run ids only |
 
-**Keywords:** Clean, simple, spacious, functional, white space, high contrast, geometric, sans-serif, grid-based, essential
+Scale: hero 2.5 to 4.25rem (fluid), section titles 1.5 to 2rem, page title 1.75rem, panel title 1.0625rem, body 1rem, secondary 0.875rem, small 0.8125rem, badges 0.75rem. Headlines use tight negative tracking; body line-height 1.5; text blocks kept under about 70 characters.
 
-**Best For:** Enterprise apps, dashboards, documentation sites, SaaS platforms, professional tools
+---
 
-**Key Effects:** Subtle hover (200-250ms), smooth transitions, sharp shadows if any, clear type hierarchy, fast loading
+## Layout and spacing
 
-### Page Pattern
+- Landing: left-aligned, max width 1180px. Hero in two columns (pitch, live price panel), then "What you can check" (page list and latest alerts), "How the data moves" (6 numbered steps), "Who built it", footer.
+- Dashboard: sidebar 232px with the five pages; top bar with API status, demo badge, UTC/local switch and theme toggle. Under 900px the sidebar becomes a top row; under 640px the pages move to a bottom tab bar.
+- Spacing scale: 2, 4, 8, 12, 16, 24, 40, 72px (`--space-xs` to `--space-4xl`).
+- Radii: panels 14px, hero price panel 20px, controls 10px, badges fully rounded.
+- Shadows: none in the dark theme; one 1px soft shadow on panels in the light theme.
 
-**Pattern Name:** Trust & Authority + Conversion
+---
 
-- **Conversion Strategy:** Security badges. Case studies. Transparent pricing. Low-friction form. Provide pause/stop and stop the logo carousel on focus, hover, and reduced motion. Previous/next controls provide the keyboard equivalent; pause offscreen/hidden and render a static logo set under reduced motion.
-- **CTA Placement:** Contact Sales / Get Quote (primary) + Nav
-- **Section Order:** Hero (mission/credibility) > Proof (logos, certs, stats) > Solution overview > Clear CTA path
+## Components
+
+- **Buttons:** 44px minimum height and width. Primary is filled with the accent; secondary is a panel-coloured outline; icon buttons are 44x44 with an `aria-label`.
+- **Segmented control:** a track in `--color-muted`; the selected option is a panel-coloured inset button.
+- **Stats strip:** one panel, cells separated by hairlines, value in 1.5rem tabular figures.
+- **Alerts:** rows with a 3px left rule (amber warning, red critical), severity badge with icon, reason sentence, then observed value, threshold, baseline, window.
+- **Notices:** left rule plus tinted background; demo notice uses the accent.
+- **Demo badge:** dashed accent outline, text "Demo data".
+- **States:** every view has loading (skeleton, `role="status"`), empty (what to do next) and error (what happened, retry).
 
 ---
 
 ## Motion
 
-**Scroll Reveal** (Subtle) — Trigger: scroll (viewport enter) | Duration: 300-400ms | Easing: `power1.out`
-
-```js
-gsap.from(el, { opacity: 0, y: 12, duration: 0.35, ease: 'power1.out', scrollTrigger: { trigger: el, start: 'top 90%', toggleActions: 'play none none reverse' } });
-```
-
-**Framework notes:** Requires the ScrollTrigger plugin registered once via gsap.registerPlugin(ScrollTrigger); Use matchMedia('(prefers-reduced-motion: reduce)') to skip non-essential motion and render the final state immediately
-
-- ✅ Keep the y offset small (8-16px) so it reads as a fade, not a slide
-- ❌ Don't reveal below-the-fold content needed for SEO/crawlers as invisible-by-default without a no-JS fallback
-- ⚡ toggleActions 'play none none reverse' avoids re-triggering on every scroll direction change
+- Landing price line draws once on load (1.6s), then the area and last-point dot fade in. Nothing else animates on its own except the loading skeleton.
+- Hover and state changes: 180ms colour and background transitions only, no movement.
+- `prefers-reduced-motion: reduce` shows the final state immediately.
 
 ---
 
-## Anti-Patterns (Do NOT Use)
+## Avoid
 
-- ❌ Playful design
-- ❌ Unclear fees
-- ❌ AI purple/pink gradients
-
-### Additional Forbidden Patterns
-
-- ❌ **Emojis as icons** — Use SVG icons (Heroicons, Lucide, Simple Icons)
-- ❌ **Missing cursor:pointer** — All clickable elements must have cursor:pointer
-- ❌ **Layout-shifting hovers** — Avoid scale transforms that shift layout
-- ❌ **Low contrast text** — Maintain 4.5:1 minimum contrast ratio
-- ❌ **Instant state changes** — Always use transitions (150-300ms)
-- ❌ **Invisible focus states** — Focus states must be visible for a11y
+- All-caps labels, eyebrow labels above headings, accenting one word of a headline.
+- Rows of identical cards with the same shadow; gradients used as decoration.
+- Colour as the only signal; hover-only information.
+- Monospace for ordinary figures (use tabular digits instead).
+- Emojis as icons (use the inline Lucide icons in `src/components/Icons.jsx`).
 
 ---
 
-## Pre-Delivery Checklist
+## Pre-delivery checklist
 
-Before delivering any UI code, verify:
-
-- [ ] No emojis used as icons (use SVG instead)
-- [ ] All icons from consistent icon set (Heroicons/Lucide)
-- [ ] `cursor-pointer` on all clickable elements
-- [ ] Hover states with smooth transitions (150-300ms)
-- [ ] Light mode: text contrast 4.5:1 minimum
-- [ ] Focus states visible for keyboard navigation
+- [ ] Both themes checked, text contrast 4.5:1 minimum
+- [ ] Focus visible on every control
+- [ ] Touch targets 44px (inline text links excepted)
 - [ ] `prefers-reduced-motion` respected
-- [ ] Responsive: 375px, 768px, 1024px, 1440px
-- [ ] No content hidden behind fixed navbars
-- [ ] No horizontal scroll on mobile
+- [ ] Responsive at 375px, 768px, 1024px, 1440px; no horizontal scroll
+- [ ] Nothing hidden behind the sticky header or the bottom tab bar
+- [ ] Loading, empty and error states present

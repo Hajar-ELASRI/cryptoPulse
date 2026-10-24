@@ -25,7 +25,7 @@ Goal: show the full flow from raw events to an explained alert on the dashboard,
 
 | Step | Show | Say |
 |---|---|---|
-| 1 | Architecture (`docs/project-context.md` §4) | Sources → Kafka → Spark (Silver/Gold) → MongoDB → API → dashboard. |
+| 1 | Landing page (`/`): live price, then "How the data moves" (details in `docs/project-context.md` §4) | Sources → Kafka → Spark (Silver/Gold) → MongoDB → API → dashboard. |
 | 2 | A raw `crypto-trades` message and the matching `trades` document | Before/after: types, dedup, `quote_volume`. |
 | 3 | **Live** | One row per symbol and minute; change is close vs previous close; ~2 min delay because of the watermark. |
 | 4 | **Alerts**, filter on a type | Each alert shows observed value, threshold, baseline and the reason sentence; thresholds are demo settings. |

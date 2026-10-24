@@ -22,4 +22,7 @@ export const Inbox = (p) => <Svg {...p}><path d="M22 12h-6l-2 3h-4l-2-3H2" /><pa
 export const Zap = (p) => <Svg {...p}><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z" /></Svg>;
 export const Pause = (p) => <Svg {...p}><rect x="14" y="4" width="4" height="16" rx="1" /><rect x="6" y="4" width="4" height="16" rx="1" /></Svg>;
 export const Play = (p) => <Svg {...p}><path d="M6 3l14 9-14 9V3z" /></Svg>;
-export const Pulse =(p) => <Svg {...p}><path d="M3 12h4l2-6 4 12 2-6h6" /></Svg>;
+export const Sun = (p) => <Svg {...p}><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" /></Svg>;
+export const Moon = (p) => <Svg {...p}><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" /></Svg>;
+export const ArrowRight = (p) => <Svg {...p}><path d="M5 12h14M12 5l7 7-7 7" /></Svg>;
+export const Pulse = (p) => <Svg {...p}><path d="M3 12h4l2-6 4 12 2-6h6" /></Svg>;
