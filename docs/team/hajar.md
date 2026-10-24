@@ -36,6 +36,10 @@ La branche actuelle comprend Docker Compose (Kafka, MongoDB, Spark), topics, col
 - Préparation des archives BTCUSDT/ETHUSDT de juillet à septembre 2026 et import long lancé dans `cryptopulse-history-btc-eth`.
 - Le démarrage du processus ne signifie pas que les six archives sont importées. Le rapport de statut doit annoncer six archives `complete` avant de cocher ce livrable.
 
+## Statut Reddit au 24 octobre 2026
+
+La demande d'accès à l'API Reddit a été envoyée et Reddit Support en a confirmé la réception par e-mail. L'approbation reste en attente dans les éléments disponibles. Aucun accès API ni collecteur Reddit réel n'est encore validé; le profil reste désactivé tant que les accès approuvés ne sont pas configurés localement.
+
 ## Tâches
 
 1. Vérifier le dépôt distant et convenir avec le groupe d'une branche d'intégration; ne pas présumer que `main` ou `develop` sont prêts.

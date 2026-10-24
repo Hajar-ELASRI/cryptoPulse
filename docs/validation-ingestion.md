@@ -72,3 +72,7 @@ Les **six ZIP ont été téléchargés et contrôlés** avec `scripts.history_do
 La nouvelle version de l'importeur tourne dans `cryptopulse-history-btc-eth`, avec les deux symboles et les trois mois explicitement fixés. La politique `on-failure:3` a été appliquée et vérifiée. Un contrôle a confirmé **2 220 000 nouvelles lignes BTCUSDT** traitées dans le premier mois. La première date est `2026-07-01T00:00:00.054Z`, et la dernière de ce checkpoint est `2026-07-01T13:59:10.119Z`; prix et quantités restent des chaînes. Un contrôle précédent par `history_status --verify` avait confirmé l'égalité du compte stocké et du checkpoint à 1 144 000 lignes.
 
 **La série complète reste en cours.** Les points de reprise `history_imports` et `scripts.history_status --verify --require-complete` fournissent l'état à jour; les nombres ci-dessus sont des observations datées, pas un compte final des six archives.
+
+### Suivi Reddit au 24 octobre 2026
+
+La demande d'accès API a été soumise. Un e-mail de Reddit Support confirme sa réception, sans confirmer son approbation. Le collecteur reste en attente des accès autorisés et de sa validation réelle. Les coordonnées personnelles, captures de messagerie et éventuels secrets ne sont pas nécessaires au dépôt.
